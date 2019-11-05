@@ -8,8 +8,8 @@ socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 port = 8080
 
 # bind to the port
-socket1.bind(("192.168.43.2", port))
-socket2.bind(("10.200.125.7", port))
+socket1.bind(("192.168.1.34", port))
+socket2.bind(("192.168.43.17", port))
 
 # queue up to 5 requests
 socket1.listen(5)

@@ -3,13 +3,13 @@ from http.server import HTTPServer, BaseHTTPRequestHandler, ThreadingHTTPServer,
 
 LOCAL_PATH = 'D:\\PyCharm Projects\\Senior\\server\\static_files'
 SERVER_PATH = '/home/ec2-user/server/'
-PATH = LOCAL_PATH
+PATH = SERVER_PATH
 PORT = 8080
 
 LOCAL_ADDRESS = '192.168.1.34'
 OZU_ADDRESS = '10.200.106.78'
 SERVER_ADDRESS = '172.31.39.41'
-ADDRESS = OZU_ADDRESS
+ADDRESS = SERVER_ADDRESS
 
 
 def getFileSize(path):
