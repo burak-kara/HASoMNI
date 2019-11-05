@@ -6,8 +6,8 @@ socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 port = 8080
 
 # bind to the port
-socket1.connect(("192.168.43.2", port))
-socket2.connect_ex(("10.200.125.7", port))
+socket1.connect(("192.168.1.34", port))
+socket2.connect(("192.168.43.17", port))
 
 # Receive no more than 1024 bytes
 msg1 = socket1.recv(1024)
