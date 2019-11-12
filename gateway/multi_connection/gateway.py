@@ -1,11 +1,17 @@
 import http.client as hc
+import socket
 import threading as th
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-WIFI_ADDRESS = '192.168.1.34'
-LAN_ADDRESS = '192.168.1.38'
-SERVER_ADDRESS = '172.31.84.69'
-ADDRESS = WIFI_ADDRESS
+WIFI_IP = '192.168.1.34'
+MOBILE_IP = '192.168.43.17'
+LAN_IP = '192.168.1.38'
+SERVER_IP = '172.31.84.69'
+DEFAULT_IP = WIFI_IP
+SECOND_IP = MOBILE_IP
+TEST_SERVER_IP = '34.204.87.0'
+TEST_SERVER_PORT = 8080
+PORT = 8080
 
 
 # def do_Connection(requested, connection_load):
@@ -28,11 +34,31 @@ ADDRESS = WIFI_ADDRESS
 #     lan.shutdown()
 #     return response
 
+def tryTwoConnection(requested):
+    print(requested[1])
+    # path1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    path2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def send_RangeRequest(requested, contentLength):
-    # newConnectionThread = th.Thread(target=do_Thread_Connection, args=())
-    # newConnectionThread.start()
+    connection1 = hc.HTTPConnection(requested[0], int(requested[1]))
 
+    connection1.request("GET", "/")
+    connection1.close()
+    # path1.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    # path2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    # path1.bind((DEFAULT_IP, PORT))
+    path2.bind((MOBILE_IP, PORT))
+
+    # path1.connect((requested[0], int(requested[1])))
+    path2.connect((requested[0], int(requested[1])))
+
+    # path1.sendall("GET / HTTP/1.1\r\n\r\n".encode('ascii'))
+    path2.sendall("GET / HTTP/1.1\r\n\r\n".encode('ascii'))
+
+    pass
+
+
+def sendRangeRequest(requested, contentLength):
     # TODO implement threading
     connection1_load = 'bytes=0-' + str(int(contentLength / 4))
     connection2_load = 'bytes=' + str(int(contentLength / 4)) + '-' + str(contentLength)
@@ -72,10 +98,10 @@ def getRequested_URL(requested):
     return host, port, path
 
 
-def handleServerRequest(self):
+def handleRangeRequests(self):
     requested = getRequested_URL(self.path[1:])
     contentLength = send_HEAD(requested)
-    response = send_RangeRequest(requested, int(contentLength))
+    response = sendRangeRequest(requested, int(contentLength))
     self.send_response(200)
     self.send_header('Content-type', 'text/plain')
     self.end_headers()
@@ -94,12 +120,13 @@ class Proxy(SimpleHTTPRequestHandler):
     def do_GET(self):
         print(self.path)
         if self.path.startswith("/34.204.87.0:8080"):
-            handleServerRequest(self)
+            handleRangeRequests(self)
+            # tryTwoConnection(getRequested_URL(self.path[1:]))
         else:
             handleRequests(self)
 
 
 # main connection
 # Starts by default once program starts
-wifi = ThreadingHTTPServer((ADDRESS, 8080), Proxy)
-wifi.serve_forever()
+defaultConnection = ThreadingHTTPServer((DEFAULT_IP, PORT), Proxy)
+defaultConnection.serve_forever()
