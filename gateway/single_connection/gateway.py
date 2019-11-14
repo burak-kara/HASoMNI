@@ -2,7 +2,7 @@ import http.client as hc
 import threading as th
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-WIFI_ADDRESS = '192.168.1.34'
+WIFI_ADDRESS = '10.200.113.100'
 LAN_ADDRESS = '192.168.1.38'
 SERVER_ADDRESS = '172.31.84.69'
 ADDRESS = WIFI_ADDRESS
