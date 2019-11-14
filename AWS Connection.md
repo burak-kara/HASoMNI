@@ -22,4 +22,9 @@
 - ssh -i "key.pem" ec2-user@DNS
 - Quite Similar Steps: https://protechgurus.com/connect-ec2-linux-instance-using-putty-gitbash-web-browser/
 
+## How to Run Server.py in Server Machine
+- cd server
+- python3.7 Server.py
 
+## Possible Mistakes
+- Do not change the IP's of server and gateway at the beginnig of each file
