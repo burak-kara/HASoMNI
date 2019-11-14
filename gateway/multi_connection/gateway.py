@@ -2,7 +2,7 @@ import http.client as hc
 import socket
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-WIFI_IP = '10.200.255.254'
+WIFI_IP = '10.200.106.78'
 MOBILE_IP = '192.168.43.17'
 LAN_IP = '192.168.1.38'
 DEFAULT_IP = WIFI_IP
@@ -86,17 +86,42 @@ def sendRangeRequest():
     return response
 
 
+def sendHeadDefault():
+    con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
+    con.request("HEAD", "/" + REQUESTED_FILE, body=None)
+    con.close()
+    return con.getresponse()
+
+
+def sendHeadSecond():
+    con = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    con.bind((MOBILE_IP, PORT))
+    con.connect((REQUESTED_IP, REQUESTED_PORT))
+    con.sendall("HEAD / HTTP/1.1\r\n\r\n".encode('ascii'))
+    response = con.recv(2048).decode("utf-8").split("\r\n")
+    responseDict = {}
+    for line in response:
+        if line.__contains__(":"):
+            key = line.split(":")[0]
+            value = line.split(":")[1][1:]
+            responseDict[key] = value
+    con.close()
+    return responseDict
+
+
+# send two head request to measure bandwidth
 def sendHead():
-    connection = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
-    connection.request("HEAD", "/" + REQUESTED_FILE, body=None)
-    response = connection.getresponse()
-    connection.close()
-    return response.getheader("content-length")
+    defaultResponse = sendHeadDefault()
+    secondResponse = sendHeadSecond()
+    return defaultResponse.getheader("content-length")
 
 
 def assignRequestedPath(requested):
+    global REQUESTED_IP
     REQUESTED_IP = requested.split(":")[0]
+    global REQUESTED_PORT
     REQUESTED_PORT = requested.split(":")[1].split("/")[0]
+    global REQUESTED_FILE
     REQUESTED_FILE = requested.split("/")[1]
 
 
@@ -118,16 +143,15 @@ def handleRequests(self):
 
 class Proxy(SimpleHTTPRequestHandler):
     def do_GET(self):
-        print(self.path)
         if self.path.startswith("/34.204.87.0:8080"):
             assignRequestedPath(self.path[1:])
-            # handleServerRequests(self)
-            tryTwoConnection()
+            handleServerRequests(self)
+            # tryTwoConnection()
         else:
             handleRequests(self)
 
 
 # main connection
 # Starts by default once program starts
-defaultConnection = ThreadingHTTPServer((DEFAULT_IP, PORT), Proxy)
-defaultConnection.serve_forever()
+connection = ThreadingHTTPServer((DEFAULT_IP, PORT), Proxy)
+connection.serve_forever()
