@@ -20,4 +20,4 @@ print(str(requester_socket.recv(1024), 'utf-8'))
 #    print(result)
 #   result = requester_socket.recv(1024)
 
-requester_socket.close()  # Mark the socket as closed
+requester_socket.close()
