@@ -1,18 +1,16 @@
 import http.client as hc
 import socket
-import threading as th
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-WIFI_IP = '192.168.1.34'
+WIFI_IP = '10.200.255.254'
 MOBILE_IP = '192.168.43.17'
 LAN_IP = '192.168.1.38'
-SERVER_IP = '172.31.84.69'
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
 PORT = 8080
-REQUESTED_HOST = ''
+REQUESTED_IP = ''
 REQUESTED_PORT = 0
-REQUESTED_PATH = ''
+REQUESTED_FILE = ''
 
 
 # Required for clean coding
@@ -41,7 +39,7 @@ def tryTwoConnection():
     # path1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     path2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    connection1 = hc.HTTPConnection(REQUESTED_HOST, int(REQUESTED_PORT))
+    connection1 = hc.HTTPConnection(REQUESTED_IP, int(REQUESTED_PORT))
 
     connection1.request("GET", "/")
     connection1.close()
@@ -55,7 +53,7 @@ def tryTwoConnection():
     path2.bind((MOBILE_IP, PORT))
 
     # path1.connect((requested[0], int(requested[1])))
-    path2.connect((REQUESTED_HOST, int(REQUESTED_PORT)))
+    path2.connect((REQUESTED_IP, int(REQUESTED_PORT)))
 
     # path1.sendall("GET / HTTP/1.1\r\n\r\n".encode('ascii'))
     path2.sendall("GET / HTTP/1.1\r\n\r\n".encode('ascii'))
@@ -63,16 +61,16 @@ def tryTwoConnection():
     pass
 
 
-def sendRangeRequest(contentLength):
-    # TODO implement threading
+def sendRangeRequest():
+    contentLength = int(sendHead())
     connection1_load = 'bytes=0-' + str(int(contentLength / 4))
     connection2_load = 'bytes=' + str(int(contentLength / 4)) + '-' + str(contentLength)
-    connection1 = hc.HTTPConnection(REQUESTED_HOST, REQUESTED_PORT)
-    connection2 = hc.HTTPConnection(REQUESTED_HOST, REQUESTED_PORT)
+    connection1 = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
+    connection2 = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
     headers1 = {'Connection': 'Keep-Alive', 'Range': connection1_load}
     headers2 = {'Connection': 'Keep-Alive', 'Range': connection2_load}
-    connection1.request("GET", "/" + REQUESTED_PATH, body=None, headers=headers1)
-    connection2.request("GET", "/" + REQUESTED_PATH, body=None, headers=headers2)
+    connection1.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers1)
+    connection2.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers2)
     response1 = connection1.getresponse()
     response2 = connection2.getresponse()
     connection1.close()
@@ -88,24 +86,22 @@ def sendRangeRequest(contentLength):
     return response
 
 
-def send_HEAD():
-    connection = hc.HTTPConnection(REQUESTED_HOST, REQUESTED_PORT)
-    connection.request("HEAD", "/" + REQUESTED_PATH, body=None)
+def sendHead():
+    connection = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
+    connection.request("HEAD", "/" + REQUESTED_FILE, body=None)
     response = connection.getresponse()
     connection.close()
     return response.getheader("content-length")
 
 
-def getRequested_URL(requested):
-    REQUESTED_HOST = requested.split(":")[0]
-    REQUESTED_PATH = requested.split(":")[1].split("/")[0]
-    REQUESTED_PORT= requested.split("/")[1]
+def assignRequestedPath(requested):
+    REQUESTED_IP = requested.split(":")[0]
+    REQUESTED_PORT = requested.split(":")[1].split("/")[0]
+    REQUESTED_FILE = requested.split("/")[1]
 
 
-def handleRangeRequests(self):
-    requested = getRequested_URL(self.path[1:])
-    contentLength = send_HEAD(requested)
-    response = sendRangeRequest(requested, int(contentLength))
+def handleServerRequests(self):
+    response = sendRangeRequest()
     self.send_response(200)
     self.send_header('Content-type', 'text/plain')
     self.end_headers()
@@ -124,8 +120,9 @@ class Proxy(SimpleHTTPRequestHandler):
     def do_GET(self):
         print(self.path)
         if self.path.startswith("/34.204.87.0:8080"):
-            # handleRangeRequests(self)
-            tryTwoConnection(getRequested_URL(self.path[1:]))
+            assignRequestedPath(self.path[1:])
+            # handleServerRequests(self)
+            tryTwoConnection()
         else:
             handleRequests(self)
 
