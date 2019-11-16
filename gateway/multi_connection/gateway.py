@@ -68,16 +68,27 @@ def sendRangeRequest():
     print(REQUESTED_FILE)
     contentLength = int(sendHead())
     connection1_load = 'bytes=0-' + str(int(contentLength / 4))
-    connection2_load = 'bytes=' + str(int(contentLength / 4)) + '-' + str(contentLength)
+    # connection2_load = 'bytes=' + str(int(contentLength / 4)) + '-' + str(contentLength)
+
     connection1 = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
-    connection2 = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
+    # connection2 = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
+    connection2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connection2.bind((MOBILE_IP, PORT))
+    connection2.connect((REQUESTED_IP, REQUESTED_PORT))
+
     headers1 = {'Connection': 'Keep-Alive', 'Range': connection1_load}
-    headers2 = {'Connection': 'Keep-Alive', 'Range': connection2_load}
+    # headers2 = {'Connection': 'Keep-Alive', 'Range': connection2_load}
+
     connection1.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers1)
-    connection2.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers2)
+    # connection2.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers2)
+    connection2.sendall(("GET / {} HTTP/1.1\r\nConnection: Keep-Alive\r\nRange: bytes={}-{}"
+                         .format(REQUESTED_FILE, str(int(contentLength / 4)), str(contentLength))).encode("ascii"))
+
     hc.parse_headers()
     response1 = connection1.getresponse()
-    response2 = connection2.getresponse()
+    # response2 = connection2.getresponse()
+    response2 = connection2.recv(1024)
+
     connection1.close()
     connection2.close()
     try:
@@ -85,7 +96,7 @@ def sendRangeRequest():
     except hc.IncompleteRead as e:
         response = e.partial
     try:
-        response += response2.read()
+        response += response2
     except hc.IncompleteRead as e:
         response += e.partial
     return response
