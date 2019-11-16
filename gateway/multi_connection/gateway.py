@@ -109,7 +109,7 @@ def sendHeadMobile():
 
 def sendHeadDefault():
     con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
-    startTime = datetime.now(timezone.utc)
+    # startTime = datetime.now(timezone.utc)
     con.request("HEAD", "/" + REQUESTED_FILE, body=None)
     response = con.getresponse()
     con.close()
