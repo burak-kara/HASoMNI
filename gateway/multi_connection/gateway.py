@@ -14,7 +14,8 @@ PORT = 8080
 REQUESTED_IP = ''
 REQUESTED_PORT = 0
 REQUESTED_FILE = ''
-
+RESPONSE_WIFI = None
+RESPONSE_LTE = None
 
 # Required for clean coding
 # def do_Connection(requested, connection_load):
@@ -85,18 +86,20 @@ def sendRangeRequest():
                          .format(REQUESTED_FILE, str(int(contentLength / 4)), str(contentLength))).encode("ascii"))
 
     hc.parse_headers()
-    response1 = connection1.getresponse()
+
+    global RESPONSE_WIFI, RESPONSE_LTE
+    RESPONSE_WIFI = connection1.getresponse()
     # response2 = connection2.getresponse()
-    response2 = connection2.recv(1024)
+    RESPONSE_LTE = connection2.recv(1024)
 
     connection1.close()
     connection2.close()
     try:
-        response = response1.read()
+        response = RESPONSE_WIFI.read()
     except hc.IncompleteRead as e:
         response = e.partial
     try:
-        response += response2
+        response += RESPONSE_LTE
     except hc.IncompleteRead as e:
         response += e.partial
     return response
