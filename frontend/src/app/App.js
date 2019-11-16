@@ -40,8 +40,9 @@ class App extends Component {
         xhr.addEventListener('load', () => {
             // update the state of the component with the result here
             this.setState({content: xhr.response}, ()=> {});
-            console.log(xhr.responseText)
+            console.log(xhr.responseText); // TODO delete
         });
+        console.log(this.state.address); // TODO delete
         xhr.open('GET', `http://${this.state.address}`);
         xhr.send();
     };
