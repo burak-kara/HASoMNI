@@ -1,9 +1,12 @@
 import http.client as hc
 import socket
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer, SimpleHTTPRequestHandler
+from datetime import datetime, timezone
+import threading
+import time
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-WIFI_IP = '10.200.106.78'
-MOBILE_IP = '192.168.43.17'
+WIFI_IP = '192.168.1.34'
+MOBILE_IP = '192.168.43.38'
 LAN_IP = '192.168.1.38'
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
@@ -62,6 +65,7 @@ def tryTwoConnection():
 
 
 def sendRangeRequest():
+    print(REQUESTED_FILE)
     contentLength = int(sendHead())
     connection1_load = 'bytes=0-' + str(int(contentLength / 4))
     connection2_load = 'bytes=' + str(int(contentLength / 4)) + '-' + str(contentLength)
@@ -71,6 +75,7 @@ def sendRangeRequest():
     headers2 = {'Connection': 'Keep-Alive', 'Range': connection2_load}
     connection1.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers1)
     connection2.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers2)
+    hc.parse_headers()
     response1 = connection1.getresponse()
     response2 = connection2.getresponse()
     connection1.close()
@@ -86,14 +91,7 @@ def sendRangeRequest():
     return response
 
 
-def sendHeadDefault():
-    con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
-    con.request("HEAD", "/" + REQUESTED_FILE, body=None)
-    con.close()
-    return con.getresponse()
-
-
-def sendHeadSecond():
+def sendHeadMobile():
     con = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     con.bind((MOBILE_IP, PORT))
     con.connect((REQUESTED_IP, REQUESTED_PORT))
@@ -109,11 +107,29 @@ def sendHeadSecond():
     return responseDict
 
 
+def sendHeadDefault():
+    con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
+    startTime = datetime.now(timezone.utc)
+    con.request("HEAD", "/" + REQUESTED_FILE, body=None)
+    response = con.getresponse()
+    con.close()
+    return response
+
+
 # send two head request to measure bandwidth
 def sendHead():
     defaultResponse = sendHeadDefault()
-    secondResponse = sendHeadSecond()
+    # secondResponse = sendHeadSecond()
     return defaultResponse.getheader("content-length")
+
+
+def handleServerRequests(self):
+    response = sendRangeRequest()
+    self.send_response(200)
+    self.send_header('Content-type', 'text/html')
+    self.send_header('Access-Control-Allow-Origin', '*')
+    self.end_headers()
+    self.wfile.write(response)
 
 
 def assignRequestedPath(requested):
@@ -123,14 +139,6 @@ def assignRequestedPath(requested):
     REQUESTED_PORT = requested.split(":")[1].split("/")[0]
     global REQUESTED_FILE
     REQUESTED_FILE = requested.split("/")[1]
-
-
-def handleServerRequests(self):
-    response = sendRangeRequest()
-    self.send_response(200)
-    self.send_header('Content-type', 'text/plain')
-    self.end_headers()
-    self.wfile.write(response)
 
 
 def handleRequests(self):
