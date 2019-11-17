@@ -1,12 +1,10 @@
-import http.client as hc
-import socket
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from datetime import datetime, timezone
-import threading
-import time
 from wsgiref.handlers import format_date_time
 from time import mktime
-import email.utils as eut
-from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+import http.client as hc
+import socket
+import threading
 
 WIFI_IP = '192.168.1.34'
 MOBILE_IP = '192.168.43.38'
@@ -19,10 +17,11 @@ REQUESTED_IP = ''
 REQUESTED_PORT = 0
 REQUESTED_FILE = ''
 
-startTimeDefault = 0
-serverTimeDefault = 0
-startTimeMobile = 0
-serverTimeMobile = 0
+NOW = datetime.now(timezone.utc).timestamp()
+startTimeDefault = NOW
+serverTimeDefault = NOW
+startTimeMobile = NOW
+serverTimeMobile = NOW
 
 headDefaultResponse = None
 headMobileResponse = None
@@ -84,18 +83,34 @@ def sendRangeRequest():
     return responseDefault + responseMobile
 
 
+# TODO differences are two close
+# mobile is always faster, Kota?
+# how to decide loads
 def calculateLoadWeight():
-    pass
+    defaultStamp = serverTimeDefault - startTimeDefault
+    mobileStamp = serverTimeMobile - startTimeMobile
+    print('defaultStamp: ' + str(defaultStamp))
+    print('mobileStamp: ' + str(mobileStamp))
 
 
-# TODO implement like sendHeadDefault
+# send two head request to measure bandwidth and get content length
+def assignContentLength():
+    global CONTENT_LENGTH
+    CONTENT_LENGTH = headDefaultResponse.getheader("content-length")
+
+
 # Send HEAD request over second connection
 def sendHeadMobile():
+    global startTimeMobile
+    global serverTimeMobile
+    global headMobileResponse
     con = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     con.bind((MOBILE_IP, PORT))
-    con.connect((REQUESTED_IP, REQUESTED_PORT))
+    con.connect((REQUESTED_IP, int(REQUESTED_PORT)))
+    startTimeMobile = getNow()
     con.sendall("HEAD / HTTP/1.1\r\n\r\n".encode('ascii'))
     response = con.recv(2048).decode("utf-8").split("\r\n")
+    serverTimeMobile = getNow()
     responseDict = {}
     for line in response:
         if line.__contains__(":"):
@@ -103,42 +118,45 @@ def sendHeadMobile():
             value = line.split(":")[1][1:]
             responseDict[key] = value
     con.close()
-    return responseDict
+    headMobileResponse = responseDict
+
+
+# return current time as timestamp
+def getNow():
+    return datetime.now(timezone.utc).timestamp()
 
 
 # Send HEAD request over default connection
 def sendHeadDefault():
-    con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
     global startTimeDefault
-    stamp = mktime(datetime.now().timetuple())
-    startTimeDefault = format_date_time(stamp)
+    global serverTimeDefault
+    global headDefaultResponse
+    con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
+    startTimeDefault = getNow()
     con.request("HEAD", "/" + REQUESTED_FILE, body=None)
     response = con.getresponse()
+    serverTimeDefault = getNow()
     con.close()
-    global headDefaultResponse
     headDefaultResponse = response
 
 
-# TODO implement threading
-# send two head request to measure bandwidth
-def getContentLength():
-    sendHeadDefault()
-    sendHeadMobile()
-    global serverTimeDefault
-    serverTimeDefault = headDefaultResponse.getheader("date")
-    global serverTimeMobile
-    serverTimeMobile = headMobileResponse.getheader("date")
-    global CONTENT_LENGTH
-    CONTENT_LENGTH = headDefaultResponse.getheader("content-length")
+# Send two HEAD requests using threads
+def measureBandWidth():
+    defaultThread = threading.Thread(target=sendHeadDefault)
+    mobileThread = threading.Thread(target=sendHeadMobile)
+    defaultThread.start()
+    mobileThread.start()
+    defaultThread.join(5000)
+    mobileThread.join(5000)
 
 
 # Assign requested ip, port and file path to global variables
 def assignRequestedPath(requested):
     global REQUESTED_IP
-    REQUESTED_IP = requested.split(":")[0]
     global REQUESTED_PORT
-    REQUESTED_PORT = requested.split(":")[1].split("/")[0]
     global REQUESTED_FILE
+    REQUESTED_IP = requested.split(":")[0]
+    REQUESTED_PORT = requested.split(":")[1].split("/")[0]
     REQUESTED_FILE = requested.split("/")[1]
 
 
@@ -146,7 +164,9 @@ class Proxy(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith("/34.204.87.0:8080"):
             assignRequestedPath(self.path[1:])
-            getContentLength()
+            measureBandWidth()
+            assignContentLength()
+            calculateLoadWeight()
             response = sendRangeRequest()
             pushBackToClient(self, response)
         else:
