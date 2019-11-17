@@ -1,9 +1,10 @@
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from datetime import datetime, timezone
+from wsgiref.handlers import format_date_time
+from time import mktime
 import http.client as hc
 import socket
-from datetime import datetime, timezone
 import threading
-import time
-from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 WIFI_IP = '192.168.1.34'
 MOBILE_IP = '192.168.43.38'
@@ -11,136 +12,25 @@ LAN_IP = '192.168.1.38'
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
 PORT = 8080
+
 REQUESTED_IP = ''
 REQUESTED_PORT = 0
 REQUESTED_FILE = ''
 
+NOW = datetime.now(timezone.utc).timestamp()
+startTimeDefault = NOW
+serverTimeDefault = NOW
+startTimeMobile = NOW
+serverTimeMobile = NOW
 
-# Required for clean coding
-# def do_Connection(requested, connection_load):
-#     connection = hc.HTTPConnection(requested[0], requested[1])
-#     headers = {'Connection': 'Keep-Alive', 'Range': connection_load}
-#     connection.request("GET", "/" + requested[2], body=None, headers=headers)
-#     response = connection.getresponse()
-#     connection.close()
-#     try:
-#         response = response.read()
-#     except hc.IncompleteRead as e:
-#         response = e.partial
-#     return response
-#
-#
-# def do_Thread_Connection(requested, connection_load):
-#     lan = ThreadingHTTPServer((LAN_ADDRESS, 8081), Proxy)
-#     lan.serve_forever()
-#     response = do_Connection(requested, connection_load)
-#     lan.shutdown()
-#     return response
-
-def tryTwoConnection():
-    print(REQUESTED_PORT)
-    # path1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    path2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    connection1 = hc.HTTPConnection(REQUESTED_IP, int(REQUESTED_PORT))
-
-    connection1.request("GET", "/")
-    connection1.close()
-
-    # might be handy in the future, but not now
-    # try to rebind default ip, but not working :D
-    # path1.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    # path2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-    # path1.bind((DEFAULT_IP, PORT))
-    path2.bind((MOBILE_IP, PORT))
-
-    # path1.connect((requested[0], int(requested[1])))
-    path2.connect((REQUESTED_IP, int(REQUESTED_PORT)))
-
-    # path1.sendall("GET / HTTP/1.1\r\n\r\n".encode('ascii'))
-    path2.sendall("GET / HTTP/1.1\r\n\r\n".encode('ascii'))
-
-    pass
+headDefaultResponse = None
+headMobileResponse = None
+CONTENT_LENGTH = 0
 
 
-def sendRangeRequest():
-    print(REQUESTED_FILE)
-    contentLength = int(sendHead())
-    connection1_load = 'bytes=0-' + str(int(contentLength / 4))
-    connection2_load = 'bytes=' + str(int(contentLength / 4)) + '-' + str(contentLength)
-    connection1 = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
-    connection2 = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
-    headers1 = {'Connection': 'Keep-Alive', 'Range': connection1_load}
-    headers2 = {'Connection': 'Keep-Alive', 'Range': connection2_load}
-    connection1.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers1)
-    connection2.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers2)
-    hc.parse_headers()
-    response1 = connection1.getresponse()
-    response2 = connection2.getresponse()
-    connection1.close()
-    connection2.close()
-    try:
-        response = response1.read()
-    except hc.IncompleteRead as e:
-        response = e.partial
-    try:
-        response += response2.read()
-    except hc.IncompleteRead as e:
-        response += e.partial
-    return response
-
-
-def sendHeadMobile():
-    con = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    con.bind((MOBILE_IP, PORT))
-    con.connect((REQUESTED_IP, REQUESTED_PORT))
-    con.sendall("HEAD / HTTP/1.1\r\n\r\n".encode('ascii'))
-    response = con.recv(2048).decode("utf-8").split("\r\n")
-    responseDict = {}
-    for line in response:
-        if line.__contains__(":"):
-            key = line.split(":")[0]
-            value = line.split(":")[1][1:]
-            responseDict[key] = value
-    con.close()
-    return responseDict
-
-
-def sendHeadDefault():
-    con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
-    startTime = datetime.now(timezone.utc)
-    con.request("HEAD", "/" + REQUESTED_FILE, body=None)
-    response = con.getresponse()
-    con.close()
-    return response
-
-
-# send two head request to measure bandwidth
-def sendHead():
-    defaultResponse = sendHeadDefault()
-    # secondResponse = sendHeadSecond()
-    return defaultResponse.getheader("content-length")
-
-
-def handleServerRequests(self):
-    response = sendRangeRequest()
-    self.send_response(200)
-    self.send_header('Content-type', 'text/html')
-    self.send_header('Access-Control-Allow-Origin', '*')
-    self.end_headers()
-    self.wfile.write(response)
-
-
-def assignRequestedPath(requested):
-    global REQUESTED_IP
-    REQUESTED_IP = requested.split(":")[0]
-    global REQUESTED_PORT
-    REQUESTED_PORT = requested.split(":")[1].split("/")[0]
-    global REQUESTED_FILE
-    REQUESTED_FILE = requested.split("/")[1]
-
-
+# Handle Request that are not going to Test Server
+# Act like usual proxy server
+# Try Hybrid connection
 def handleRequests(self):
     # TODO
     self.send_response(200)
@@ -149,12 +39,136 @@ def handleRequests(self):
     # self.copyfile(ur.urlopen(self.path[1:]), self.wfile)
 
 
+def getTime():
+    now = datetime.now()
+    stamp = mktime(now.timetuple())
+    return format_date_time(stamp)
+
+
+def pushBackToClient(self, response):
+    self.send_response(200)
+    self.send_header('Content-type', 'text/html')
+    self.send_header('Access-Control-Allow-Origin', '*')
+    self.send_header('Date', getTime())
+    self.end_headers()
+    self.wfile.write(response)
+
+
+def useMobile():
+    path2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    path2.bind((MOBILE_IP, PORT))
+    path2.connect((REQUESTED_IP, int(REQUESTED_PORT)))
+    path2.sendall("GET / HTTP/1.1\r\n\r\n".encode('ascii'))
+    return ""
+
+
+def useDefault(endByte):
+    connectionLoad = 'bytes=0-' + endByte
+    con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
+    headers = {'Connection': 'Keep-Alive', 'Range': connectionLoad}
+    con.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers)
+    response1 = con.getresponse()
+    con.close()
+    try:
+        response = response1.read()
+    except hc.IncompleteRead as e:
+        response = e.partial
+    return response
+
+
+def sendRangeRequest():
+    responseDefault = useDefault("")
+    responseMobile = useMobile()
+    # TODO concat responses and return
+    return responseDefault + responseMobile
+
+
+# TODO differences are two close
+# mobile is always faster, Kota?
+# how to decide loads
+def calculateLoadWeight():
+    defaultStamp = serverTimeDefault - startTimeDefault
+    mobileStamp = serverTimeMobile - startTimeMobile
+    print('defaultStamp: ' + str(defaultStamp))
+    print('mobileStamp: ' + str(mobileStamp))
+
+
+# send two head request to measure bandwidth and get content length
+def assignContentLength():
+    global CONTENT_LENGTH
+    CONTENT_LENGTH = headDefaultResponse.getheader("content-length")
+
+
+# Send HEAD request over second connection
+def sendHeadMobile():
+    global startTimeMobile
+    global serverTimeMobile
+    global headMobileResponse
+    con = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    con.bind((MOBILE_IP, PORT))
+    con.connect((REQUESTED_IP, int(REQUESTED_PORT)))
+    startTimeMobile = getNow()
+    con.sendall("HEAD / HTTP/1.1\r\n\r\n".encode('ascii'))
+    response = con.recv(2048).decode("utf-8").split("\r\n")
+    serverTimeMobile = getNow()
+    responseDict = {}
+    for line in response:
+        if line.__contains__(":"):
+            key = line.split(":")[0]
+            value = line.split(":")[1][1:]
+            responseDict[key] = value
+    con.close()
+    headMobileResponse = responseDict
+
+
+# return current time as timestamp
+def getNow():
+    return datetime.now(timezone.utc).timestamp()
+
+
+# Send HEAD request over default connection
+def sendHeadDefault():
+    global startTimeDefault
+    global serverTimeDefault
+    global headDefaultResponse
+    con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
+    startTimeDefault = getNow()
+    con.request("HEAD", "/" + REQUESTED_FILE, body=None)
+    response = con.getresponse()
+    serverTimeDefault = getNow()
+    con.close()
+    headDefaultResponse = response
+
+
+# Send two HEAD requests using threads
+def measureBandWidth():
+    defaultThread = threading.Thread(target=sendHeadDefault)
+    mobileThread = threading.Thread(target=sendHeadMobile)
+    defaultThread.start()
+    mobileThread.start()
+    defaultThread.join(5000)
+    mobileThread.join(5000)
+
+
+# Assign requested ip, port and file path to global variables
+def assignRequestedPath(requested):
+    global REQUESTED_IP
+    global REQUESTED_PORT
+    global REQUESTED_FILE
+    REQUESTED_IP = requested.split(":")[0]
+    REQUESTED_PORT = requested.split(":")[1].split("/")[0]
+    REQUESTED_FILE = requested.split("/")[1]
+
+
 class Proxy(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith("/34.204.87.0:8080"):
             assignRequestedPath(self.path[1:])
-            handleServerRequests(self)
-            # tryTwoConnection()
+            measureBandWidth()
+            assignContentLength()
+            calculateLoadWeight()
+            response = sendRangeRequest()
+            pushBackToClient(self, response)
         else:
             handleRequests(self)
 
