@@ -27,6 +27,9 @@ headDefaultResponse = None
 headMobileResponse = None
 CONTENT_LENGTH = 0
 
+RESPONSE_LTE = None
+RESPONSE_WIFI = None
+
 
 # Handle Request that are not going to Test Server
 # Act like usual proxy server
@@ -54,12 +57,16 @@ def pushBackToClient(self, response):
     self.wfile.write(response)
 
 
-def useMobile():
-    path2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    path2.bind((MOBILE_IP, PORT))
-    path2.connect((REQUESTED_IP, int(REQUESTED_PORT)))
-    path2.sendall("GET / HTTP/1.1\r\n\r\n".encode('ascii'))
-    return ""
+def useMobile(startByte, endByte):
+    connectionLTE = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connectionLTE.bind((MOBILE_IP, PORT))
+    connectionLTE.connect((REQUESTED_IP, int(REQUESTED_PORT)))
+    connectionLTE.sendall(("GET / {} HTTP/1.1\r\nConnection: Keep-Alive\r\nRange: bytes={}-{}"
+                         .format(REQUESTED_FILE, startByte, endByte).encode("ascii")))
+
+    global RESPONSE_LTE
+    RESPONSE_LTE = connectionLTE.recv(1024)  # should be string or byte?
+    connectionLTE.close()
 
 
 def useDefault(endByte):
@@ -73,14 +80,13 @@ def useDefault(endByte):
         response = response1.read()
     except hc.IncompleteRead as e:
         response = e.partial
-    return response
+
+    global RESPONSE_WIFI
+    RESPONSE_WIFI = response
 
 
 def sendRangeRequest():
-    responseDefault = useDefault("")
-    responseMobile = useMobile()
-    # TODO concat responses and return
-    return responseDefault + responseMobile
+    return RESPONSE_WIFI + RESPONSE_LTE
 
 
 # TODO differences are two close
