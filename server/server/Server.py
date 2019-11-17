@@ -1,5 +1,8 @@
 import os
-from http.server import HTTPServer, BaseHTTPRequestHandler, ThreadingHTTPServer, SimpleHTTPRequestHandler
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from datetime import datetime
+from wsgiref.handlers import format_date_time
+from time import mktime
 
 LOCAL_PATH = 'D:\\PyCharm Projects\\Senior\\server\\static_files'
 SERVER_PATH = '/home/ec2-user/server/'
@@ -10,6 +13,29 @@ LOCAL_ADDRESS = '192.168.1.34'
 OZU_ADDRESS = '10.200.106.78'
 SERVER_ADDRESS = '172.31.39.41'
 ADDRESS = SERVER_ADDRESS
+
+
+def createBody(self, code=200, contentRange=""):
+    file = open(getFilePath(self.path), 'rb')
+    if code == 206:
+        ranges = getBeginEnd(contentRange)
+        file.seek(ranges[0], 0)
+        self.wfile.write(file.read(ranges[1] - ranges[0]))
+    else:
+        self.wfile.write(file.read())
+    file.close()
+
+
+def getBeginEnd(contentRange):
+    begin = int(contentRange.split("-")[0])
+    end = int(contentRange.split("-")[1])
+    return begin, end
+
+
+def addRangeHeaders(self, contentRange, size):
+    ranges = getBeginEnd(contentRange)
+    contentRage = "bytes " + str(ranges[0]) + "-" + str(ranges[1]) + "/" + str(size)
+    self.send_header("Content-Range", contentRage)
 
 
 def getFileSize(path):
@@ -32,14 +58,6 @@ def getFilePath(path):
         return PATH + 'index.html'
 
 
-def isRangeRequest(headers):
-    headerDict = dict(zip(headers.keys(), headers.values()))
-    if "Range" not in headerDict.keys():
-        return False, ""
-    else:
-        return True, headerDict["Range"].split("=")[1]
-
-
 def getHeaderValues(path):
     file = getFilePath(path)
     fileType = getFileType(file)
@@ -47,38 +65,31 @@ def getHeaderValues(path):
     return fileType, size, file
 
 
-def getBeginEnd(contentRange):
-    begin = int(contentRange.split("-")[0])
-    end = int(contentRange.split("-")[1])
-    return begin, end
-
-
-def addRangeHeaders(self, contentRange, size):
-    ranges = getBeginEnd(contentRange)
-    contentRage = "bytes " + str(ranges[0]) + "-" + str(ranges[1]) + "/" + str(size)
-    self.send_header("Content-Range", contentRage)
-
-
-def createBody(self, code=200, contentRange=""):
-    file = open(getFilePath(self.path), 'rb')
-    if code == 206:
-        ranges = getBeginEnd(contentRange)
-        file.seek(ranges[0], 0)
-        self.wfile.write(file.read(ranges[1] - ranges[0]))
-    else:
-        self.wfile.write(file.read())
-    file.close()
+def getTime():
+    now = datetime.now()
+    stamp = mktime(now.timetuple())
+    return format_date_time(stamp)
 
 
 def createHeaders(self, code=200, contentRange=""):
+    time = getTime()
     headerValues = getHeaderValues(self.path)
     self.send_response(code)
-    self.send_header("Accept-Ranges", "bytes")
+    self.send_header('Accept-Ranges', 'bytes')
     self.send_header('Content-type', headerValues[0])
-    self.send_header("Content-Length", headerValues[1])
+    self.send_header('Content-Length', headerValues[1])
+    # self.send_header('Date', time)
     if code == 206:
         addRangeHeaders(self, contentRange, headerValues[1])
     self.end_headers()
+
+
+def isRangeRequest(headers):
+    headerDict = dict(zip(headers.keys(), headers.values()))
+    if "Range" not in headerDict.keys():
+        return False, ""
+    else:
+        return True, headerDict["Range"].split("=")[1]
 
 
 class HTTPRequestHandler(SimpleHTTPRequestHandler):
@@ -95,6 +106,6 @@ class HTTPRequestHandler(SimpleHTTPRequestHandler):
         createHeaders(self)
 
 
-print("Ready to serve from better server")
+print("---- Server started. Waiting for incoming requests ----")
 httpWifi = ThreadingHTTPServer((ADDRESS, PORT), HTTPRequestHandler)
 httpWifi.serve_forever()

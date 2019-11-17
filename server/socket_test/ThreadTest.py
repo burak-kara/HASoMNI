@@ -20,8 +20,10 @@ def sendHeadDefault():
     startTime = datetime.now(timezone.utc)
     con.request("HEAD", "/" + REQUESTED_FILE, body=None)
     response = con.getresponse()
+    endTime = datetime.now(timezone.utc)
     con.close()
     print(response.getheader("content-length"))
+    print(startTime - endTime)
 
 
 thread1 = threading.Thread(target=sendHeadDefault)
