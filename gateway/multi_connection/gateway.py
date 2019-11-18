@@ -3,15 +3,17 @@ from datetime import datetime, timezone
 from wsgiref.handlers import format_date_time
 from time import mktime
 import http.client as hc
-import socket
+from socket import *
 import threading
+import time
 
 WIFI_IP = '192.168.1.34'
 MOBILE_IP = '192.168.43.38'
 LAN_IP = '192.168.1.38'
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
-PORT = 8080
+DEFAULT_PORT = 8080
+MOBILE_PORT = 8081
 
 REQUESTED_IP = ''
 REQUESTED_PORT = 0
@@ -23,12 +25,18 @@ serverTimeDefault = NOW
 startTimeMobile = NOW
 serverTimeMobile = NOW
 
-headDefaultResponse = None
-headMobileResponse = None
+DEFAULT_RANGE_END = 0
+MOBILE_RANGE_START = 0
 CONTENT_LENGTH = 0
+CONTENT_TYPE = ""
 
-RESPONSE_LTE = None
-RESPONSE_WIFI = None
+RESPONSE_DEFAULT_HEAD = None
+RESPONSE_DEFAULT = b""
+RESPONSE_MOBILE = b""
+RESPONSE = b""
+
+LINE = "\r\n"
+HEADER = LINE + LINE
 
 
 # Handle Request that are not going to Test Server
@@ -48,80 +56,96 @@ def getTime():
     return format_date_time(stamp)
 
 
-def pushBackToClient(self, response):
+def pushBackToClient(self):
     self.send_response(200)
-    self.send_header('Content-type', 'text/html')
+    self.send_header('Content-type', CONTENT_TYPE)
     self.send_header('Access-Control-Allow-Origin', '*')
     self.send_header('Date', getTime())
     self.end_headers()
-    self.wfile.write(response)
+    self.wfile.write(RESPONSE)
 
 
-def useMobile(startByte, endByte):
-    global RESPONSE_LTE
-    connectionLTE = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    connectionLTE.bind((MOBILE_IP, PORT))
-    connectionLTE.connect((REQUESTED_IP, int(REQUESTED_PORT)))
-    connectionLTE.sendall(("GET / {} HTTP/1.1\r\nConnection: Keep-Alive\r\nRange: bytes={}-{}"
-                           .format(REQUESTED_FILE, startByte, endByte).encode("ascii")))
-    RESPONSE_LTE = connectionLTE.recv(1024)  # should be string or byte?
-    connectionLTE.close()
+def useMobile():
+    global RESPONSE_MOBILE
+    print("trying to send")
+    con = socket(AF_INET, SOCK_STREAM)
+    con.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    con.bind((MOBILE_IP, MOBILE_PORT + 1))
+    con.connect((REQUESTED_IP, REQUESTED_PORT))
+    request = "GET /" + REQUESTED_FILE + " HTTP/1.1" + LINE
+    request += "Connection: close" + LINE
+    request += "Range: bytes=" + str(MOBILE_RANGE_START) + "-" + str(CONTENT_LENGTH) + HEADER
+    con.sendall(request.encode("ascii"))
+    while True:
+        data = con.recv(2048)
+        if not data:
+            break
+        RESPONSE_MOBILE += data
+    con.close()
+    RESPONSE_MOBILE = RESPONSE_MOBILE.split(HEADER.encode("utf-8"), 1)[1]
+    print(RESPONSE_MOBILE)
 
 
-def useDefault(endByte):
-    global RESPONSE_WIFI
-    connectionLoad = 'bytes=0-' + endByte
+def useDefault():
+    global RESPONSE_DEFAULT
+    rangeValue = 'bytes=0-' + str(DEFAULT_RANGE_END)
+    headers = {'Connection': 'Keep-Alive', 'Range': rangeValue}
     con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
-    headers = {'Connection': 'Keep-Alive', 'Range': connectionLoad}
     con.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers)
-    res = con.getresponse()
+    response = con.getresponse()
     con.close()
     try:
-        RESPONSE_WIFI = res.read()
+        RESPONSE_DEFAULT = response.read()
     except hc.IncompleteRead as e:
-        RESPONSE_WIFI = e.partial
+        RESPONSE_DEFAULT = e.partial
 
 
 def sendRangeRequest():
-    return RESPONSE_WIFI + RESPONSE_LTE
+    global RESPONSE
+    defaultThread = threading.Thread(target=useDefault)
+    mobileThread = threading.Thread(target=useMobile)
+    defaultThread.start()
+    mobileThread.start()
+    defaultThread.join()
+    mobileThread.join()
+    RESPONSE = RESPONSE_DEFAULT + RESPONSE_MOBILE
 
 
-# TODO differences are two close
-# mobile is always faster, Kota?
-# how to decide loads
 def calculateLoadWeight():
+    global DEFAULT_RANGE_END
+    global MOBILE_RANGE_START
     defaultStamp = serverTimeDefault - startTimeDefault
     mobileStamp = serverTimeMobile - startTimeMobile
-    print('defaultStamp: ' + str(defaultStamp))
-    print('mobileStamp: ' + str(mobileStamp))
+    if mobileStamp != 0:
+        defaultLoadRate = round((mobileStamp / (defaultStamp + mobileStamp)), 2)
+    else:
+        defaultLoadRate = 1
+    DEFAULT_RANGE_END = round(defaultLoadRate * CONTENT_LENGTH)
+    MOBILE_RANGE_START = DEFAULT_RANGE_END
 
 
-# send two head request to measure bandwidth and get content length
-def assignContentLength():
+def assignContentInfo():
     global CONTENT_LENGTH
-    CONTENT_LENGTH = headDefaultResponse.getheader("content-length")
+    global CONTENT_TYPE
+    CONTENT_LENGTH = int(RESPONSE_DEFAULT_HEAD.getheader("content-length"))
+    CONTENT_TYPE = RESPONSE_DEFAULT_HEAD.getheader("content-type")
 
 
 # Send HEAD request over second connection
 def sendHeadMobile():
     global startTimeMobile
     global serverTimeMobile
-    global headMobileResponse
-    con = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    con.bind((MOBILE_IP, PORT))
-    con.connect((REQUESTED_IP, int(REQUESTED_PORT)))
+    con = socket(AF_INET, SOCK_STREAM)
+    con.bind((MOBILE_IP, MOBILE_PORT))
+    con.connect((REQUESTED_IP, REQUESTED_PORT))
+    request = "HEAD / HTTP/1.1" + LINE
+    request += "Connection: close" + HEADER
     startTimeMobile = getNow()
-    con.sendall("HEAD / HTTP/1.1\r\n\r\n".encode('ascii'))
-    response = con.recv(2048).decode("utf-8").split("\r\n")
+    con.sendall(request.encode('ascii'))
+    con.recv(2048)
     serverTimeMobile = getNow()
-    responseDict = {}
-    for line in response:
-        if line.__contains__(":"):
-            key = line.split(":")[0]
-            value = line.split(":")[1][1:]
-            responseDict[key] = value
     con.close()
-    headMobileResponse = responseDict
+    print("closed")
 
 
 # return current time as timestamp
@@ -133,14 +157,14 @@ def getNow():
 def sendHeadDefault():
     global startTimeDefault
     global serverTimeDefault
-    global headDefaultResponse
+    global RESPONSE_DEFAULT_HEAD
     con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
     startTimeDefault = getNow()
     con.request("HEAD", "/" + REQUESTED_FILE, body=None)
     response = con.getresponse()
     serverTimeDefault = getNow()
     con.close()
-    headDefaultResponse = response
+    RESPONSE_DEFAULT_HEAD = response
 
 
 # Send two HEAD requests using threads
@@ -149,8 +173,8 @@ def measureBandWidth():
     mobileThread = threading.Thread(target=sendHeadMobile)
     defaultThread.start()
     mobileThread.start()
-    defaultThread.join(5000)
-    mobileThread.join(5000)
+    defaultThread.join()
+    mobileThread.join()
 
 
 # Assign requested ip, port and file path to global variables
@@ -159,7 +183,7 @@ def assignRequestedPath(requested):
     global REQUESTED_PORT
     global REQUESTED_FILE
     REQUESTED_IP = requested.split(":")[0]
-    REQUESTED_PORT = requested.split(":")[1].split("/")[0]
+    REQUESTED_PORT = int(requested.split(":")[1].split("/")[0])
     REQUESTED_FILE = requested.split("/")[1]
 
 
@@ -168,15 +192,15 @@ class Proxy(SimpleHTTPRequestHandler):
         if self.path.startswith("/34.204.87.0:8080"):
             assignRequestedPath(self.path[1:])
             measureBandWidth()
-            assignContentLength()
+            assignContentInfo()
             calculateLoadWeight()
-            response = sendRangeRequest()
-            pushBackToClient(self, response)
+            sendRangeRequest()
+            pushBackToClient(self)
         else:
             handleRequests(self)
 
 
 # main connection
 # Starts by default once program starts
-connection = ThreadingHTTPServer((DEFAULT_IP, PORT), Proxy)
+connection = ThreadingHTTPServer((DEFAULT_IP, DEFAULT_PORT), Proxy)
 connection.serve_forever()
