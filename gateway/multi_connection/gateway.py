@@ -58,31 +58,28 @@ def pushBackToClient(self, response):
 
 
 def useMobile(startByte, endByte):
+    global RESPONSE_LTE
     connectionLTE = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connectionLTE.bind((MOBILE_IP, PORT))
     connectionLTE.connect((REQUESTED_IP, int(REQUESTED_PORT)))
     connectionLTE.sendall(("GET / {} HTTP/1.1\r\nConnection: Keep-Alive\r\nRange: bytes={}-{}"
-                         .format(REQUESTED_FILE, startByte, endByte).encode("ascii")))
-
-    global RESPONSE_LTE
+                           .format(REQUESTED_FILE, startByte, endByte).encode("ascii")))
     RESPONSE_LTE = connectionLTE.recv(1024)  # should be string or byte?
     connectionLTE.close()
 
 
 def useDefault(endByte):
+    global RESPONSE_WIFI
     connectionLoad = 'bytes=0-' + endByte
     con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
     headers = {'Connection': 'Keep-Alive', 'Range': connectionLoad}
     con.request("GET", "/" + REQUESTED_FILE, body=None, headers=headers)
-    response1 = con.getresponse()
+    res = con.getresponse()
     con.close()
     try:
-        response = response1.read()
+        RESPONSE_WIFI = res.read()
     except hc.IncompleteRead as e:
-        response = e.partial
-
-    global RESPONSE_WIFI
-    RESPONSE_WIFI = response
+        RESPONSE_WIFI = e.partial
 
 
 def sendRangeRequest():
