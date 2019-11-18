@@ -1,20 +1,16 @@
 import socket
 
-# create a socket object
-socket1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-port = 8080
+con = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+con.bind(('192.168.1.34', 8080))
+con.connect(("34.204.87.0", 8080))
+con.sendall("GET /index.html HTTP/1.1\r\nHost: 34.204.87.0:8080\r\n\r\n".encode('ascii'))
+response = ""
+while True:
+    data = con.recv(2048)
+    if not data:
+        break
+    response += data.decode('utf-8')
+print(response)
+con.close()
 
-# bind to the port
-socket1.connect(("192.168.1.34", port))
-socket2.connect(("192.168.43.17", port))
 
-# Receive no more than 1024 bytes
-msg1 = socket1.recv(1024)
-msg2 = socket2.recv(1024)
-
-socket1.close()
-socket2.close()
-
-print(msg1.decode('ascii'))
-print(msg2.decode('ascii'))
