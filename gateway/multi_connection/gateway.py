@@ -7,7 +7,7 @@ from socket import *
 import threading
 import time
 
-WIFI_IP = '192.168.1.34'
+WIFI_IP = '172.20.10.12'
 MOBILE_IP = '192.168.43.38'
 LAN_IP = '192.168.1.38'
 DEFAULT_IP = WIFI_IP
@@ -67,7 +67,6 @@ def pushBackToClient(self):
 
 def useMobile():
     global RESPONSE_MOBILE
-    print("trying to send")
     con = socket(AF_INET, SOCK_STREAM)
     con.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     con.bind((MOBILE_IP, MOBILE_PORT + 1))
@@ -83,7 +82,6 @@ def useMobile():
         RESPONSE_MOBILE += data
     con.close()
     RESPONSE_MOBILE = RESPONSE_MOBILE.split(HEADER.encode("utf-8"), 1)[1]
-    print(RESPONSE_MOBILE)
 
 
 def useDefault():
@@ -122,6 +120,7 @@ def calculateLoadWeight():
         defaultLoadRate = 1
     DEFAULT_RANGE_END = round(defaultLoadRate * CONTENT_LENGTH)
     MOBILE_RANGE_START = DEFAULT_RANGE_END
+    print("Default: " + str(DEFAULT_RANGE_END) + "/" + str(CONTENT_LENGTH))
 
 
 def assignContentInfo():
@@ -145,7 +144,6 @@ def sendHeadMobile():
     con.recv(2048)
     serverTimeMobile = getNow()
     con.close()
-    print("closed")
 
 
 # return current time as timestamp
@@ -197,7 +195,13 @@ class Proxy(SimpleHTTPRequestHandler):
             sendRangeRequest()
             pushBackToClient(self)
         else:
-            handleRequests(self)
+            # changed
+            assignRequestedPath(self.path[1:])
+            measureBandWidth()
+            assignContentInfo()
+            calculateLoadWeight()
+            sendRangeRequest()
+            pushBackToClient(self)
 
 
 # main connection
