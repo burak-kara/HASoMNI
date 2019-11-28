@@ -47,6 +47,8 @@ def getFileType(path):
         return 'text/html'
     elif path.endswith('.txt'):
         return 'text/plain'
+    elif path.endswith('.mp4'):
+        return 'video/mp4'
     else:
         return 'text/plain'
 
@@ -54,6 +56,8 @@ def getFileType(path):
 def getFilePath(path):
     if path == '/test20mb' or path == '/test150mb':
         return PATH + path[1:]
+    elif path == '/testVideo':
+        return PATH + path[1:] + '.mp4'
     else:
         return PATH + 'index.html'
 
@@ -72,13 +76,11 @@ def getTime():
 
 
 def createHeaders(self, code=200, contentRange=""):
-    time = getTime()
     headerValues = getHeaderValues(self.path)
     self.send_response(code)
     self.send_header('Accept-Ranges', 'bytes')
     self.send_header('Content-type', headerValues[0])
     self.send_header('Content-Length', headerValues[1])
-    # self.send_header('Date', time)
     if code == 206:
         addRangeHeaders(self, contentRange, headerValues[1])
     self.end_headers()
