@@ -3,6 +3,7 @@ import psutil
 
 old_value = 0
 
+# günahkar
 
 def convert_to_gbit(value):
     return value / 1024. / 1024. / 1024. * 8
