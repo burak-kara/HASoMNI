@@ -7,7 +7,7 @@ from socket import *
 import threading
 import time
 
-WIFI_IP = '172.20.10.12'
+WIFI_IP = '192.168.1.34'
 MOBILE_IP = '192.168.43.38'
 LAN_IP = '192.168.1.38'
 DEFAULT_IP = WIFI_IP
@@ -37,17 +37,6 @@ RESPONSE = b""
 
 LINE = "\r\n"
 HEADER = LINE + LINE
-
-
-# Handle Request that are not going to Test Server
-# Act like usual proxy server
-# Try Hybrid connection
-def handleRequests(self):
-    # TODO
-    self.send_response(200)
-    self.send_header('Content-type', 'text/plain')
-    self.end_headers()
-    # self.copyfile(ur.urlopen(self.path[1:]), self.wfile)
 
 
 def getTime():
@@ -195,7 +184,7 @@ class Proxy(SimpleHTTPRequestHandler):
             sendRangeRequest()
             pushBackToClient(self)
         else:
-            # changed
+            # TODO implement
             assignRequestedPath(self.path[1:])
             measureBandWidth()
             assignContentInfo()
