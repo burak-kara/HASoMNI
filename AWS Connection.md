@@ -27,4 +27,4 @@
 - python3.7 Server.py
 
 ## Possible Mistakes
-- Do not change the IP's of server and gateway at the beginnig of each file
+- Do not change the IP's of server and gateway at the beginning of each file
