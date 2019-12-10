@@ -6,8 +6,8 @@ import http.client as hc
 from socket import *
 import threading
 
-WIFI_IP = '192.168.43.2'
-MOBILE_IP = '172.20.10.13'
+WIFI_IP = '192.168.1.34'
+MOBILE_IP = '192.168.43.38'
 LAN_IP = '192.168.1.38'
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
@@ -117,7 +117,6 @@ def assignContentInfo():
 
 
 # Send HEAD request over second connection
-# TODO try to use this connection for getting data
 def sendHeadMobile():
     global startTimeMobile, serverTimeMobile
     con = socket(AF_INET, SOCK_STREAM)
@@ -138,7 +137,6 @@ def getNow():
 
 
 # Send HEAD request over default connection
-#  TODO try to use this connection for getting data
 def sendHeadDefault():
     global startTimeDefault, serverTimeDefault, RESPONSE_DEFAULT_HEAD
     con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
@@ -161,7 +159,6 @@ def measureBandWidth():
 
 
 # Assign requested ip, port and file path to global variables
-# TODO check parsing for requests other than our server
 def assignRequestedPath(requested):
     global REQUESTED_IP, REQUESTED_PORT, REQUESTED_FILE
     REQUESTED_IP = requested.split(":")[0]
