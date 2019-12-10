@@ -13,7 +13,7 @@ DEFAULT_PORT = 8080
 MOBILE_PORT = 8081
 
 REQUESTED_IP = ''
-REQUESTED_PORT = 0
+REQUESTED_PORT = 8080
 REQUESTED_FILE = ''
 
 NOW = datetime.now(timezone.utc).timestamp()
@@ -53,8 +53,14 @@ class ServerHandler:
     def assignRequestedPath(requested):
         global REQUESTED_IP, REQUESTED_PORT, REQUESTED_FILE
         REQUESTED_IP = requested.split(":")[0]
-        REQUESTED_PORT = int(requested.split(":")[1].split("/")[0])
-        REQUESTED_FILE = requested.split("/")[1]
+        try:
+            REQUESTED_PORT = int(requested.split(":")[1].split("/")[0])
+        except:
+            print("port not found")
+        try:
+            REQUESTED_FILE = requested.split("/")[1]
+        except:
+            print("requested file not found")
 
     # Send two HEAD requests using threads
     def measureBandWidth(self):
