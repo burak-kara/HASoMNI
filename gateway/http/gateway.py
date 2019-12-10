@@ -6,7 +6,7 @@ import http.client as hc
 from socket import *
 import threading
 
-WIFI_IP = '192.168.43.2'
+WIFI_IP = '10.200.106.78'
 MOBILE_IP = '172.20.10.13'
 LAN_IP = '192.168.1.38'
 DEFAULT_IP = WIFI_IP
@@ -36,6 +36,7 @@ RESPONSE = b""
 
 LINE = "\r\n"
 HEADER = LINE + LINE
+isSecondConnectionAvailable = True
 
 
 def getTime():
@@ -89,11 +90,14 @@ def useDefault():
 def sendRangeRequest():
     global RESPONSE
     defaultThread = threading.Thread(target=useDefault)
-    mobileThread = threading.Thread(target=useMobile)
+    if isSecondConnectionAvailable:
+        mobileThread = threading.Thread(target=useMobile)
     defaultThread.start()
-    mobileThread.start()
+    if isSecondConnectionAvailable:
+        mobileThread.start()
     defaultThread.join()
-    mobileThread.join()
+    if isSecondConnectionAvailable:
+        mobileThread.join()
     RESPONSE = RESPONSE_DEFAULT + RESPONSE_MOBILE
 
 
@@ -119,17 +123,21 @@ def assignContentInfo():
 # Send HEAD request over second connection
 # TODO try to use this connection for getting data
 def sendHeadMobile():
-    global startTimeMobile, serverTimeMobile
-    con = socket(AF_INET, SOCK_STREAM)
-    con.bind((MOBILE_IP, MOBILE_PORT))
-    con.connect((REQUESTED_IP, REQUESTED_PORT))
-    request = "HEAD / HTTP/1.1" + LINE
-    request += "Connection: close" + HEADER
-    startTimeMobile = getNow()
-    con.sendall(request.encode('ascii'))
-    con.recv(2048)
-    serverTimeMobile = getNow()
-    con.close()
+    global startTimeMobile, serverTimeMobile, isSecondConnectionAvailable
+    try:
+        con = socket(AF_INET, SOCK_STREAM)
+        con.bind((MOBILE_IP, MOBILE_PORT))
+        con.connect((REQUESTED_IP, REQUESTED_PORT))
+        request = "HEAD / HTTP/1.1" + LINE
+        request += "Connection: close" + HEADER
+        startTimeMobile = getNow()
+        con.sendall(request.encode('ascii'))
+        con.recv(2048)
+        serverTimeMobile = getNow()
+        con.close()
+    except:
+        print("second connection is not found")
+        isSecondConnectionAvailable = False
 
 
 # return current time as timestamp
