@@ -16,8 +16,8 @@ class Proxy(SimpleHTTPRequestHandler):
             # TODO call WebsiteHttpsHandler
             pass
         else:
+            WebsiteHttpHandler(self)
             # TODO call WebsiteHttpHandler
-            pass
 
 
 connection = ThreadingHTTPServer((DEFAULT_IP, DEFAULT_PORT), Proxy)
