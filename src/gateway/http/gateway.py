@@ -12,9 +12,9 @@ class Proxy(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith("/3.134.95.115:8080"):
             ServerHandler(self)
-        elif self.path.startswith("/https"):
-            # TODO call WebsiteHttpsHandler
-            pass
+        # elif self.path.startswith("/https"):
+        #     # TODO call WebsiteHttpsHandler
+        #     pass
         else:
             WebsiteHttpHandler(self)
             # TODO call WebsiteHttpHandler

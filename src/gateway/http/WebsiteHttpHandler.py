@@ -6,7 +6,7 @@ from socket import *
 import threading
 
 WIFI_IP = '192.168.1.34'
-MOBILE_IP = '172.20.10.13'
+MOBILE_IP = '192.168.43.38'
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
 DEFAULT_PORT = 8080
@@ -35,7 +35,7 @@ RESPONSE = b""
 
 LINE = "\r\n"
 HEADER = LINE + LINE
-HTTP = "http://"
+HTTP_VERSION = "http://"
 
 
 class WebsiteHttpHandler:
@@ -51,10 +51,11 @@ class WebsiteHttpHandler:
     # Requested string comes in format of http://site/path
     @staticmethod
     def assignRequestedPath(requested):
-        global REQUESTED_SITE, REQUESTED_PATH
+        global REQUESTED_SITE, REQUESTED_PATH, HTTP_VERSION
+        HTTP_VERSION = requested.split(":")[0] + "://"
         REQUESTED_SITE = requested.split("//")[1].split("/")[0]
         try:
-            REQUESTED_PATH = requested.split("//")[1].split("/")[1]
+            REQUESTED_PATH = requested.split("//")[1].split("/", 1)[1]
         except:
             print("no path found")
 
@@ -71,7 +72,7 @@ class WebsiteHttpHandler:
     def sendHeadDefault(self):
         global startTimeDefault, serverTimeDefault, RESPONSE_DEFAULT_HEAD
         startTimeDefault = self.getNow()
-        response = req.head(HTTP + REQUESTED_SITE + "/" + REQUESTED_PATH)
+        response = req.head(HTTP_VERSION + REQUESTED_SITE + "/" + REQUESTED_PATH)
         serverTimeDefault = self.getNow()
         RESPONSE_DEFAULT_HEAD = response
 
@@ -80,13 +81,14 @@ class WebsiteHttpHandler:
     def getNow():
         return datetime.now(timezone.utc).timestamp()
 
+    # TODO modify like https/httpsSocket.py
     # Send HEAD request over second connection
     def sendHeadMobile(self):
         global startTimeMobile, serverTimeMobile, isSecondConnectionAvailable
         try:
             con = socket(AF_INET, SOCK_STREAM)
             con.bind((MOBILE_IP, MOBILE_PORT))
-            con.connect(REQUESTED_SITE)
+            con.connect((REQUESTED_SITE, 443))
             request = "HEAD / HTTP/1.1" + LINE
             request += "Connection: close" + HEADER
             startTimeMobile = self.getNow()
@@ -94,14 +96,14 @@ class WebsiteHttpHandler:
             con.recv(2048)
             serverTimeMobile = self.getNow()
             con.close()
-        except:
+        except Exception as exp:
+            print(exp)
             print("second connection is not found")
             isSecondConnectionAvailable = False
 
     @staticmethod
     def assignContentInfo():
         global CONTENT_LENGTH, CONTENT_TYPE, isAcceptRanges
-        print(RESPONSE_DEFAULT_HEAD.headers["content-type"])
         try:
             if RESPONSE_DEFAULT_HEAD.headers["accept-ranges"].lower() == "none":
                 isAcceptRanges = False
@@ -127,6 +129,7 @@ class WebsiteHttpHandler:
         else:
             defaultLoadRate = 1
         DEFAULT_RANGE_END = round(defaultLoadRate * CONTENT_LENGTH)
+        print(str(DEFAULT_RANGE_END) + "/" + str(CONTENT_LENGTH))
         MOBILE_RANGE_START = DEFAULT_RANGE_END
 
     def sendRangeRequest(self):
@@ -150,18 +153,20 @@ class WebsiteHttpHandler:
             headers = {'Connection': 'Keep-Alive', 'Range': rangeValue}
         else:
             headers = {'Connection': 'Keep-Alive'}
-        RESPONSE_DEFAULT = req.get(HTTP + REQUESTED_SITE + "/" + REQUESTED_PATH, headers=headers).content
+        RESPONSE_DEFAULT = req.get(HTTP_VERSION + REQUESTED_SITE + "/" + REQUESTED_PATH, headers=headers).content
 
+    # TODO modify like https/httpsSocket.py
     @staticmethod
     def useMobile():
         global RESPONSE_MOBILE
         con = socket(AF_INET, SOCK_STREAM)
         con.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         con.bind((MOBILE_IP, MOBILE_PORT + 1))
-        con.connect(REQUESTED_SITE)
+        con.connect((REQUESTED_SITE, 443))
         request = "GET /" + REQUESTED_PATH + " HTTP/1.1" + LINE
         request += "Connection: close" + LINE
         request += "Range: bytes=" + str(MOBILE_RANGE_START) + "-" + str(CONTENT_LENGTH) + HEADER
+        print(request)
         con.sendall(request.encode("ascii"))
         while True:
             data = con.recv(2048)
