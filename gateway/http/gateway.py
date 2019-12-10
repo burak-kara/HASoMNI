@@ -196,7 +196,5 @@ class Proxy(SimpleHTTPRequestHandler):
             pushBackToClient(self)
 
 
-# main connection
-# Starts by default once program starts
 connection = ThreadingHTTPServer((DEFAULT_IP, DEFAULT_PORT), Proxy)
 connection.serve_forever()
