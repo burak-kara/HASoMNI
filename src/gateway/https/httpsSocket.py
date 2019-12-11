@@ -11,14 +11,14 @@ context.check_hostname = True
 context.load_default_certs()
 
 con = socket(AF_INET, SOCK_STREAM)
-con.bind(("192.168.1.34", 8080))
+con.bind(("10.200.106.78", 8080))
 
 ssl_sock = context.wrap_socket(con, server_hostname=hostname)
 ssl_sock.connect((hostname, 443))
 request = "GET / HTTP/1.1" + LINE
 request += "Host: www.httpvshttps.com" + LINE
 request += "Accept: */*" + LINE
-request += "User-Agent: kibitzer"+ LINE
+request += "User-Agent: kibitzer" + LINE
 request += "Connection: keep-alive" + HEADER
 ssl_sock.sendall(request.encode('utf-8'))
 
