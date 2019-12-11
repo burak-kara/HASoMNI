@@ -5,8 +5,8 @@ import http.client as hc
 from socket import *
 import threading
 
-WIFI_IP = '192.168.1.34'
-MOBILE_IP = '172.20.10.13'
+WIFI_IP = '10.200.106.78'
+MOBILE_IP = '192.168.43.38'
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
 DEFAULT_PORT = 8080

@@ -5,7 +5,7 @@ from time import mktime
 from socket import *
 import threading
 
-WIFI_IP = '192.168.1.34'
+WIFI_IP = '10.200.106.78'
 MOBILE_IP = '192.168.43.38'
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
@@ -72,7 +72,7 @@ class WebsiteHttpHandler:
     def sendHeadDefault(self):
         global startTimeDefault, serverTimeDefault, RESPONSE_DEFAULT_HEAD
         startTimeDefault = self.getNow()
-        response = req.head(HTTP_VERSION + REQUESTED_HOSTNAME + "/" + REQUESTED_PATH)
+        response = req.head(HTTP_VERSION + REQUESTED_HOSTNAME + "/" + REQUESTED_PATH, verify=False)
         serverTimeDefault = self.getNow()
         RESPONSE_DEFAULT_HEAD = response
 
@@ -88,12 +88,22 @@ class WebsiteHttpHandler:
         try:
             con = socket(AF_INET, SOCK_STREAM)
             con.bind((MOBILE_IP, MOBILE_PORT))
-            con.connect((REQUESTED_HOSTNAME, 443))
-            request = "HEAD / HTTP/1.1" + LINE
-            request += "Connection: close" + HEADER
+            con.connect((REQUESTED_HOSTNAME, 80))
+            request = "HEAD /" + REQUESTED_PATH + " HTTP/1.1" + LINE
+            request += "Host: " + REQUESTED_HOSTNAME + LINE
+            request += "Accept: */*" + LINE
+            request += "User-Agent: kibitzer" + LINE
+            request += "Connection: Keep-Alive" + HEADER
             startTimeMobile = self.getNow()
-            con.sendall(request.encode('ascii'))
-            con.recv(2048)
+            con.sendall(request.encode('utf-8'))
+            # con.recv(2048)
+            response = b""
+            while True:
+                data = con.recv(2048)
+                if not data:
+                    break
+                response += data
+            print(response.decode("utf-8"))
             serverTimeMobile = self.getNow()
             con.close()
         except Exception as exp:
@@ -129,7 +139,7 @@ class WebsiteHttpHandler:
         else:
             defaultLoadRate = 1
         DEFAULT_RANGE_END = round(defaultLoadRate * CONTENT_LENGTH)
-        print(str(DEFAULT_RANGE_END) + "/" + str(CONTENT_LENGTH))
+        print("load weight:" + str(DEFAULT_RANGE_END) + "/" + str(CONTENT_LENGTH))
         MOBILE_RANGE_START = DEFAULT_RANGE_END
 
     def sendRangeRequest(self):
@@ -148,12 +158,16 @@ class WebsiteHttpHandler:
     @staticmethod
     def useDefault():
         global RESPONSE_DEFAULT
+        headers = {
+            "Host": REQUESTED_HOSTNAME, "Accept": "*/*",
+            "User-Agent": "kibitzer", 'Connection': 'Keep-Alive'
+        }
         if isAcceptRanges:
             rangeValue = 'bytes=0-' + str(DEFAULT_RANGE_END)
-            headers = {'Connection': 'Keep-Alive', 'Range': rangeValue}
-        else:
-            headers = {'Connection': 'Keep-Alive'}
-        RESPONSE_DEFAULT = req.get(HTTP_VERSION + REQUESTED_HOSTNAME + "/" + REQUESTED_PATH, headers=headers).content
+            headers.update({'Range': rangeValue})
+
+        RESPONSE_DEFAULT = req.get(HTTP_VERSION + REQUESTED_HOSTNAME + "/" + REQUESTED_PATH,
+                                   headers=headers, verify=True).content
 
     # TODO modify like https/httpsSocket.py
     @staticmethod
@@ -162,17 +176,20 @@ class WebsiteHttpHandler:
         con = socket(AF_INET, SOCK_STREAM)
         con.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         con.bind((MOBILE_IP, MOBILE_PORT + 1))
-        con.connect((REQUESTED_HOSTNAME, 443))
+        con.connect((REQUESTED_HOSTNAME, 80))
         request = "GET /" + REQUESTED_PATH + " HTTP/1.1" + LINE
-        request += "Connection: close" + LINE
+        request += "Host: " + REQUESTED_HOSTNAME + LINE
+        request += "Accept: */*" + LINE
+        request += "User-Agent: kibitzer" + LINE
+        request += "Connection: Keep-Alive" + LINE
         request += "Range: bytes=" + str(MOBILE_RANGE_START) + "-" + str(CONTENT_LENGTH) + HEADER
-        print(request)
-        con.sendall(request.encode("ascii"))
+        con.sendall(request.encode("utf-8"))
         while True:
             data = con.recv(2048)
             if not data:
                 break
             RESPONSE_MOBILE += data
+        print(RESPONSE_MOBILE.decode("utf-8"))
         con.close()
         RESPONSE_MOBILE = RESPONSE_MOBILE.split(HEADER.encode("utf-8"), 1)[1]
 
