@@ -2,7 +2,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from src.gateway.http.ServerHandler import ServerHandler
 from src.gateway.http.WebsiteHandler import WebsiteHttpHandler
 
-WIFI_IP = '10.200.106.78'
+WIFI_IP = '192.168.1.34'
 DEFAULT_IP = WIFI_IP
 DEFAULT_PORT = 8080
 
