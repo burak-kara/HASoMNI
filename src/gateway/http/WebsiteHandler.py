@@ -12,7 +12,7 @@ SECOND_IP = MOBILE_IP
 DEFAULT_PORT = 8080
 MOBILE_PORT = 8081
 
-REQUESTED_SITE = ''
+REQUESTED_HOSTNAME = ''
 REQUESTED_PATH = ''
 
 NOW = datetime.now(timezone.utc).timestamp()
@@ -51,9 +51,9 @@ class WebsiteHttpHandler:
     # Requested string comes in format of http://site/path
     @staticmethod
     def assignRequestedPath(requested):
-        global REQUESTED_SITE, REQUESTED_PATH, HTTP_VERSION
+        global REQUESTED_HOSTNAME, REQUESTED_PATH, HTTP_VERSION
         HTTP_VERSION = requested.split(":")[0] + "://"
-        REQUESTED_SITE = requested.split("//")[1].split("/")[0]
+        REQUESTED_HOSTNAME = requested.split("//")[1].split("/")[0]
         try:
             REQUESTED_PATH = requested.split("//")[1].split("/", 1)[1]
         except:
@@ -72,7 +72,7 @@ class WebsiteHttpHandler:
     def sendHeadDefault(self):
         global startTimeDefault, serverTimeDefault, RESPONSE_DEFAULT_HEAD
         startTimeDefault = self.getNow()
-        response = req.head(HTTP_VERSION + REQUESTED_SITE + "/" + REQUESTED_PATH)
+        response = req.head(HTTP_VERSION + REQUESTED_HOSTNAME + "/" + REQUESTED_PATH)
         serverTimeDefault = self.getNow()
         RESPONSE_DEFAULT_HEAD = response
 
@@ -88,7 +88,7 @@ class WebsiteHttpHandler:
         try:
             con = socket(AF_INET, SOCK_STREAM)
             con.bind((MOBILE_IP, MOBILE_PORT))
-            con.connect((REQUESTED_SITE, 443))
+            con.connect((REQUESTED_HOSTNAME, 443))
             request = "HEAD / HTTP/1.1" + LINE
             request += "Connection: close" + HEADER
             startTimeMobile = self.getNow()
@@ -153,7 +153,7 @@ class WebsiteHttpHandler:
             headers = {'Connection': 'Keep-Alive', 'Range': rangeValue}
         else:
             headers = {'Connection': 'Keep-Alive'}
-        RESPONSE_DEFAULT = req.get(HTTP_VERSION + REQUESTED_SITE + "/" + REQUESTED_PATH, headers=headers).content
+        RESPONSE_DEFAULT = req.get(HTTP_VERSION + REQUESTED_HOSTNAME + "/" + REQUESTED_PATH, headers=headers).content
 
     # TODO modify like https/httpsSocket.py
     @staticmethod
@@ -162,7 +162,7 @@ class WebsiteHttpHandler:
         con = socket(AF_INET, SOCK_STREAM)
         con.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         con.bind((MOBILE_IP, MOBILE_PORT + 1))
-        con.connect((REQUESTED_SITE, 443))
+        con.connect((REQUESTED_HOSTNAME, 443))
         request = "GET /" + REQUESTED_PATH + " HTTP/1.1" + LINE
         request += "Connection: close" + LINE
         request += "Range: bytes=" + str(MOBILE_RANGE_START) + "-" + str(CONTENT_LENGTH) + HEADER
