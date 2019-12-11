@@ -4,7 +4,7 @@ from datetime import datetime
 from wsgiref.handlers import format_date_time
 from time import mktime
 
-LOCAL_PATH = 'D:\\PyCharm Projects\\Senior\\server\\static_files'
+LOCAL_PATH = '/src/server/static_files'
 SERVER_PATH = '/home/ec2-user/server/'
 PATH = SERVER_PATH
 PORT = 8080

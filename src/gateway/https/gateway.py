@@ -5,10 +5,9 @@ from time import mktime
 import http.client as hc
 from socket import *
 import threading
-import time
 
-WIFI_IP = '192.168.1.34'
-MOBILE_IP = '192.168.43.38'
+WIFI_IP = '10.200.106.78'
+MOBILE_IP = '172.20.10.13'
 LAN_IP = '192.168.1.38'
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
@@ -37,6 +36,7 @@ RESPONSE = b""
 
 LINE = "\r\n"
 HEADER = LINE + LINE
+isSecondConnectionAvailable = True
 
 
 def getTime():
@@ -90,17 +90,19 @@ def useDefault():
 def sendRangeRequest():
     global RESPONSE
     defaultThread = threading.Thread(target=useDefault)
-    mobileThread = threading.Thread(target=useMobile)
+    if isSecondConnectionAvailable:
+        mobileThread = threading.Thread(target=useMobile)
     defaultThread.start()
-    mobileThread.start()
+    if isSecondConnectionAvailable:
+        mobileThread.start()
     defaultThread.join()
-    mobileThread.join()
+    if isSecondConnectionAvailable:
+        mobileThread.join()
     RESPONSE = RESPONSE_DEFAULT + RESPONSE_MOBILE
 
 
 def calculateLoadWeight():
-    global DEFAULT_RANGE_END
-    global MOBILE_RANGE_START
+    global DEFAULT_RANGE_END, MOBILE_RANGE_START
     defaultStamp = serverTimeDefault - startTimeDefault
     mobileStamp = serverTimeMobile - startTimeMobile
     if mobileStamp != 0:
@@ -113,26 +115,29 @@ def calculateLoadWeight():
 
 
 def assignContentInfo():
-    global CONTENT_LENGTH
-    global CONTENT_TYPE
+    global CONTENT_LENGTH, CONTENT_TYPE
     CONTENT_LENGTH = int(RESPONSE_DEFAULT_HEAD.getheader("content-length"))
     CONTENT_TYPE = RESPONSE_DEFAULT_HEAD.getheader("content-type")
 
 
 # Send HEAD request over second connection
+# TODO try to use this connection for getting data
 def sendHeadMobile():
-    global startTimeMobile
-    global serverTimeMobile
-    con = socket(AF_INET, SOCK_STREAM)
-    con.bind((MOBILE_IP, MOBILE_PORT))
-    con.connect((REQUESTED_IP, REQUESTED_PORT))
-    request = "HEAD / HTTP/1.1" + LINE
-    request += "Connection: close" + HEADER
-    startTimeMobile = getNow()
-    con.sendall(request.encode('ascii'))
-    con.recv(2048)
-    serverTimeMobile = getNow()
-    con.close()
+    global startTimeMobile, serverTimeMobile, isSecondConnectionAvailable
+    try:
+        con = socket(AF_INET, SOCK_STREAM)
+        con.bind((MOBILE_IP, MOBILE_PORT))
+        con.connect((REQUESTED_IP, REQUESTED_PORT))
+        request = "HEAD / HTTP/1.1" + LINE
+        request += "Connection: close" + HEADER
+        startTimeMobile = getNow()
+        con.sendall(request.encode('ascii'))
+        con.recv(2048)
+        serverTimeMobile = getNow()
+        con.close()
+    except:
+        print("second connection is not found")
+        isSecondConnectionAvailable = False
 
 
 # return current time as timestamp
@@ -141,10 +146,9 @@ def getNow():
 
 
 # Send HEAD request over default connection
+#  TODO try to use this connection for getting data
 def sendHeadDefault():
-    global startTimeDefault
-    global serverTimeDefault
-    global RESPONSE_DEFAULT_HEAD
+    global startTimeDefault, serverTimeDefault, RESPONSE_DEFAULT_HEAD
     con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
     startTimeDefault = getNow()
     con.request("HEAD", "/" + REQUESTED_FILE, body=None)
@@ -165,10 +169,9 @@ def measureBandWidth():
 
 
 # Assign requested ip, port and file path to global variables
+# TODO check parsing for requests other than our server
 def assignRequestedPath(requested):
-    global REQUESTED_IP
-    global REQUESTED_PORT
-    global REQUESTED_FILE
+    global REQUESTED_IP, REQUESTED_PORT, REQUESTED_FILE
     REQUESTED_IP = requested.split(":")[0]
     REQUESTED_PORT = int(requested.split(":")[1].split("/")[0])
     REQUESTED_FILE = requested.split("/")[1]
@@ -176,7 +179,7 @@ def assignRequestedPath(requested):
 
 class Proxy(SimpleHTTPRequestHandler):
     def do_GET(self):
-        if self.path.startswith("/34.204.87.0:8080"):
+        if self.path.startswith("/3.134.95.115:8080"):
             assignRequestedPath(self.path[1:])
             measureBandWidth()
             assignContentInfo()
@@ -193,7 +196,5 @@ class Proxy(SimpleHTTPRequestHandler):
             pushBackToClient(self)
 
 
-# main connection
-# Starts by default once program starts
 connection = ThreadingHTTPServer((DEFAULT_IP, DEFAULT_PORT), Proxy)
 connection.serve_forever()

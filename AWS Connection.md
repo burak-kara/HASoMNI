@@ -25,4 +25,4 @@
 
 - ![Run](https://github.com/burakkkara/SeniorProject/blob/master/images/run.png)
 ## Possible Mistakes
-- Do not change the IP's of server and gateway at the beginnig of each file
+- Do not change the IP's of server and gateway at the beginning of each file
