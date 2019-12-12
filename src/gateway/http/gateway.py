@@ -13,6 +13,9 @@ class Proxy(SimpleHTTPRequestHandler):
             ServerHandler(self)
         elif self.path.startswith("/http"):
             WebsiteHttpHandler(self)
+        else:
+            # TODO implement error 404, 500 vs
+            pass
 
 
 connection = ThreadingHTTPServer((DEFAULT_IP, DEFAULT_PORT), Proxy)
