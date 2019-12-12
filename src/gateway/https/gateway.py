@@ -29,7 +29,7 @@ MOBILE_RANGE_START = 0
 CONTENT_LENGTH = 0
 CONTENT_TYPE = ""
 
-RESPONSE_DEFAULT_HEAD = None
+HEAD_RESPONSE_HEADERS = None
 RESPONSE_DEFAULT = b""
 RESPONSE_MOBILE = b""
 RESPONSE = b""
@@ -116,8 +116,8 @@ def calculateLoadWeight():
 
 def assignContentInfo():
     global CONTENT_LENGTH, CONTENT_TYPE
-    CONTENT_LENGTH = int(RESPONSE_DEFAULT_HEAD.getheader("content-length"))
-    CONTENT_TYPE = RESPONSE_DEFAULT_HEAD.getheader("content-type")
+    CONTENT_LENGTH = int(HEAD_RESPONSE_HEADERS.getheader("content-length"))
+    CONTENT_TYPE = HEAD_RESPONSE_HEADERS.getheader("content-type")
 
 
 # Send HEAD request over second connection
@@ -148,7 +148,7 @@ def getNow():
 # Send HEAD request over default connection
 #  TODO try to use this connection for getting data
 def sendHeadDefault():
-    global startTimeDefault, serverTimeDefault, RESPONSE_DEFAULT_HEAD
+    global startTimeDefault, serverTimeDefault, HEAD_RESPONSE_HEADERS
     con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
     startTimeDefault = getNow()
     con.request("HEAD", "/" + REQUESTED_FILE, body=None)
