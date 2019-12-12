@@ -29,7 +29,7 @@ CONTENT_TYPE = ""
 isSecondConnectionAvailable = True
 isAcceptRanges = True
 
-RESPONSE_DEFAULT_HEAD = None
+HEAD_RESPONSE_HEADERS = None
 RESPONSE_DEFAULT = b""
 RESPONSE_MOBILE = b""
 RESPONSE = b""
@@ -73,7 +73,7 @@ class ServerHandler:
 
     # Send HEAD request over default connection
     def sendHeadDefault(self):
-        global startTimeDefault, serverTimeDefault, RESPONSE_DEFAULT_HEAD
+        global startTimeDefault, serverTimeDefault, HEAD_RESPONSE_HEADERS
         con = hc.HTTPConnection(REQUESTED_IP, REQUESTED_PORT)
         startTimeDefault = self.getNow()
         con.request("HEAD", "/" + REQUESTED_FILE, body=None)
@@ -108,10 +108,10 @@ class ServerHandler:
     @staticmethod
     def assignContentInfo():
         global CONTENT_LENGTH, CONTENT_TYPE, isAcceptRanges
-        if RESPONSE_DEFAULT_HEAD.getheader("accept-ranges").lower() == "none":
+        if HEAD_RESPONSE_HEADERS.getheader("accept-ranges").lower() == "none":
             isAcceptRanges = False
-        CONTENT_LENGTH = int(RESPONSE_DEFAULT_HEAD.getheader("content-length"))
-        CONTENT_TYPE = RESPONSE_DEFAULT_HEAD.getheader("content-type")
+        CONTENT_LENGTH = int(HEAD_RESPONSE_HEADERS.getheader("content-length"))
+        CONTENT_TYPE = HEAD_RESPONSE_HEADERS.getheader("content-type")
 
     @staticmethod
     def calculateLoadWeight():

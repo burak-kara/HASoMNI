@@ -14,7 +14,7 @@ DEFAULT_PORT = 8080
 MOBILE_PORT = 8081
 
 REQUESTED_HOSTNAME = ''
-REQUESTED_PATH = ''
+REQUESTED_PATH = '/'
 REQUESTED_PORT = 80
 SOCKET_HEAD_HEADERS = ""
 SOCKET_GET_HEADERS = ""
@@ -33,7 +33,7 @@ CONTENT_TYPE = ""
 isSecondConnectionAvailable = True
 isAcceptRanges = True
 
-RESPONSE_DEFAULT_HEAD = None
+HEAD_RESPONSE_HEADERS = None
 RESPONSE_DEFAULT = b""
 RESPONSE_MOBILE = b""
 RESPONSE = b""
@@ -60,20 +60,20 @@ class WebsiteHttpHandler:
     def assignRequestedPath(requested):
         global REQUESTED_HOSTNAME, REQUESTED_PATH, REQUESTED_PORT, HTTP_VERSION, IS_VERIFY
         HTTP_VERSION = requested.split(":")[0] + "://"
+        print(HTTP_VERSION)  # TODO debug purpose
         if HTTP_VERSION.__contains__("s"):
-            print("https")
             IS_VERIFY = True
             REQUESTED_PORT = 443
         REQUESTED_HOSTNAME = requested.split("//")[1].split("/")[0]
         try:
-            REQUESTED_PATH = requested.split("//")[1].split("/", 1)[1]
+            REQUESTED_PATH += requested.split("//")[1].split("/", 1)[1]
         except:
             print("no path found")
 
     @staticmethod
     def createSocketHeadHeaders():
         global SOCKET_HEAD_HEADERS
-        SOCKET_HEAD_HEADERS = "HEAD /" + REQUESTED_PATH + " HTTP/1.1" + LINE
+        SOCKET_HEAD_HEADERS = "HEAD " + REQUESTED_PATH + " HTTP/1.1" + LINE
         SOCKET_HEAD_HEADERS += "Host: " + REQUESTED_HOSTNAME + LINE
         SOCKET_HEAD_HEADERS += "Accept: */*" + LINE
         SOCKET_HEAD_HEADERS += "User-Agent: kibitzer" + LINE
@@ -90,14 +90,10 @@ class WebsiteHttpHandler:
 
     # Send HEAD request over default connection
     def sendHeadDefault(self):
-        global startTimeDefault, serverTimeDefault, RESPONSE_DEFAULT_HEAD
+        global startTimeDefault, serverTimeDefault, HEAD_RESPONSE_HEADERS
         startTimeDefault = self.getNow()
-        response = req.head(HTTP_VERSION + REQUESTED_HOSTNAME + "/" + REQUESTED_PATH, verify=IS_VERIFY)
+        HEAD_RESPONSE_HEADERS = req.head(HTTP_VERSION + REQUESTED_HOSTNAME + REQUESTED_PATH, verify=IS_VERIFY).headers
         serverTimeDefault = self.getNow()
-        print("start time default " + str(startTimeDefault))
-        print("end time default " + str(serverTimeDefault))
-        print("default time stamp: " + str(serverTimeDefault - startTimeDefault))
-        RESPONSE_DEFAULT_HEAD = response
 
     # return current time as timestamp
     @staticmethod
@@ -110,13 +106,12 @@ class WebsiteHttpHandler:
         try:
             con = socket(AF_INET, SOCK_STREAM)
             con.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-            con.bind((MOBILE_IP, MOBILE_PORT))
+            con.bind((SECOND_IP, MOBILE_PORT))
             if IS_VERIFY:
                 self.headHttpsSocket(con)
             else:
                 self.headHttpSocket(con)
-        except Exception as exp:
-            print(exp)
+        except:
             print("second connection is not found")
             isSecondConnectionAvailable = False
 
@@ -132,9 +127,6 @@ class WebsiteHttpHandler:
         ssl_socket.sendall(SOCKET_HEAD_HEADERS.encode("utf-8"))
         ssl_socket.recv(1024)
         serverTimeMobile = self.getNow()
-        print("start time mobile: " + str(startTimeMobile))
-        print("end time mobile: " + str(serverTimeMobile))
-        print("mobile time stamp: " + str(serverTimeMobile - startTimeMobile))
         ssl_socket.close()
         con.close()
 
@@ -143,6 +135,7 @@ class WebsiteHttpHandler:
         con.connect((REQUESTED_HOSTNAME, REQUESTED_PORT))
         startTimeMobile = self.getNow()
         con.sendall(SOCKET_HEAD_HEADERS.encode('utf-8'))
+        con.recv(1024)
         serverTimeMobile = self.getNow()
         con.close()
 
@@ -150,17 +143,17 @@ class WebsiteHttpHandler:
     def assignContentInfo():
         global CONTENT_LENGTH, CONTENT_TYPE, isAcceptRanges
         try:
-            if RESPONSE_DEFAULT_HEAD.headers["accept-ranges"].lower() == "none":
+            if HEAD_RESPONSE_HEADERS["accept-ranges"].lower() == "none":
                 isAcceptRanges = False
         except:
             print("accept ranges header was not found")
             isAcceptRanges = False
         try:
-            CONTENT_LENGTH = int(RESPONSE_DEFAULT_HEAD.headers["content-length"])
+            CONTENT_LENGTH = int(HEAD_RESPONSE_HEADERS["content-length"])
         except:
             print("content length header was not found")
         try:
-            CONTENT_TYPE = RESPONSE_DEFAULT_HEAD.headers["content-type"]
+            CONTENT_TYPE = HEAD_RESPONSE_HEADERS["content-type"]
         except:
             print("content type header was not found")
 
@@ -169,20 +162,17 @@ class WebsiteHttpHandler:
         global DEFAULT_RANGE_END, MOBILE_RANGE_START
         defaultStamp = serverTimeDefault - startTimeDefault
         mobileStamp = serverTimeMobile - startTimeMobile
-        print(mobileStamp)
         if mobileStamp != 0:
             defaultLoadRate = round((mobileStamp / (defaultStamp + mobileStamp)), 2)
-            print("default load rate: " + str(round((mobileStamp / (defaultStamp + mobileStamp)), 2)))
         else:
             defaultLoadRate = 1
         DEFAULT_RANGE_END = round(defaultLoadRate * CONTENT_LENGTH)
-        print("load weight:" + str(DEFAULT_RANGE_END) + "/" + str(CONTENT_LENGTH))
         MOBILE_RANGE_START = DEFAULT_RANGE_END + 1
 
     @staticmethod
     def createSocketGetHeaders():
         global SOCKET_GET_HEADERS
-        SOCKET_GET_HEADERS = "GET /" + REQUESTED_PATH + " HTTP/1.1" + LINE
+        SOCKET_GET_HEADERS = "GET " + REQUESTED_PATH + " HTTP/1.1" + LINE
         SOCKET_GET_HEADERS += "Host: " + REQUESTED_HOSTNAME + LINE
         SOCKET_GET_HEADERS += "Accept: */*" + LINE
         SOCKET_GET_HEADERS += "User-Agent: kibitzer" + LINE
@@ -213,14 +203,14 @@ class WebsiteHttpHandler:
             rangeValue = 'bytes=0-' + str(DEFAULT_RANGE_END)
             headers.update({'Range': rangeValue})
 
-        RESPONSE_DEFAULT = req.get(HTTP_VERSION + REQUESTED_HOSTNAME + "/" + REQUESTED_PATH,
+        RESPONSE_DEFAULT = req.get(HTTP_VERSION + REQUESTED_HOSTNAME + REQUESTED_PATH,
                                    headers=headers, verify=True).content
 
     def useMobile(self):
         global RESPONSE_MOBILE
         con = socket(AF_INET, SOCK_STREAM)
         con.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        con.bind((MOBILE_IP, MOBILE_PORT + 1))
+        con.bind((SECOND_IP, MOBILE_PORT + 1))
         if IS_VERIFY:
             self.getHttpsSocket(con)
         else:
@@ -252,14 +242,17 @@ class WebsiteHttpHandler:
         global RESPONSE_MOBILE
         con.connect((REQUESTED_HOSTNAME, REQUESTED_PORT))
         con.sendall(SOCKET_GET_HEADERS.encode("utf-8"))
+        isBody = False
         while True:
             data = con.recv(102400)
             if not data:
                 break
-            RESPONSE_MOBILE += data
+            if isBody:
+                RESPONSE_MOBILE += data
+            isBody = True
         con.close()
-        RESPONSE_MOBILE = RESPONSE_MOBILE.split(HEADER.encode("utf-8"), 1)[1]
 
+    # TODO modify and add headers from range requests' responses
     @staticmethod
     def pushBackToClient(httpServerSelf):
         httpServerSelf.send_response(200)
