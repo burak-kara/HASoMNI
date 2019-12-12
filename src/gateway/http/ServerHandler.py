@@ -4,13 +4,14 @@ from time import mktime
 import http.client as hc
 from socket import *
 import threading
+import config.config as cfg
 
-WIFI_IP = '10.200.106.78'
-MOBILE_IP = '192.168.43.38'
+WIFI_IP = cfg.wifi['ip']
+MOBILE_IP = cfg.mobile['ip']
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
-DEFAULT_PORT = 8080
-MOBILE_PORT = 8081
+DEFAULT_PORT = cfg.wifi['port']
+MOBILE_PORT = cfg.mobile['port']
 
 REQUESTED_IP = ''
 REQUESTED_PORT = 8080

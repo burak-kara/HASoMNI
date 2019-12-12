@@ -5,17 +5,18 @@ from time import mktime
 from socket import *
 import threading
 import ssl
+import config.config as cfg
 
-WIFI_IP = '192.168.1.34'
-MOBILE_IP = '192.168.43.38'
+WIFI_IP = cfg.wifi['ip']
+MOBILE_IP = cfg.mobile['ip']
 DEFAULT_IP = WIFI_IP
 SECOND_IP = MOBILE_IP
-DEFAULT_PORT = 8080
-MOBILE_PORT = 8081
+DEFAULT_PORT = cfg.wifi['port']
+MOBILE_PORT = cfg.mobile['port']
 
 REQUESTED_HOSTNAME = ''
 REQUESTED_PATH = '/'
-REQUESTED_PORT = 80
+REQUESTED_PORT = cfg.website['httpPort']
 SOCKET_HEAD_HEADERS = ""
 SOCKET_GET_HEADERS = ""
 IS_VERIFY = False
@@ -63,7 +64,7 @@ class WebsiteHttpHandler:
         print(HTTP_VERSION)  # TODO debug purpose
         if HTTP_VERSION.__contains__("s"):
             IS_VERIFY = True
-            REQUESTED_PORT = 443
+            REQUESTED_PORT = cfg.website['httpsPort']
         REQUESTED_HOSTNAME = requested.split("//")[1].split("/")[0]
         try:
             REQUESTED_PATH += requested.split("//")[1].split("/", 1)[1]
