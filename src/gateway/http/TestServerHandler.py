@@ -6,22 +6,22 @@ from socket import *
 import threading
 import config.config as cfg
 
-WIFI_IP = cfg.wifi['ip']
-MOBILE_IP = cfg.mobile['ip']
-DEFAULT_IP = WIFI_IP
-SECOND_IP = MOBILE_IP
-DEFAULT_PORT = cfg.wifi['port']
-MOBILE_PORT = cfg.mobile['port']
+# assign connection info
+DEFAULT_IP = cfg.primary['ip']
+DEFAULT_PORT = cfg.primary['port']
+SECOND_IP = cfg.secondary['ip']
+SECOND_PORT = cfg.secondary['port']
 
 REQUESTED_IP = ''
 REQUESTED_PORT = 8080
 REQUESTED_FILE = ''
 
-NOW = datetime.now(timezone.utc).timestamp()
-startTimeDefault = NOW
-serverTimeDefault = NOW
-startTimeMobile = NOW
-serverTimeMobile = NOW
+# init timestamps
+CURRENT = datetime.now(timezone.utc).timestamp()
+startTimeDefault = CURRENT
+serverTimeDefault = CURRENT
+startTimeMobile = CURRENT
+END_STAMP_SECOND = CURRENT
 
 DEFAULT_RANGE_END = 0
 MOBILE_RANGE_START = 0
@@ -39,7 +39,7 @@ LINE = "\r\n"
 HEADER = LINE + LINE
 
 
-class ServerHandler:
+class TestServerHandler:
     def __init__(self, httpServerSelf):
         self.assignRequestedPath(httpServerSelf.path[1:])
         self.measureBandWidth()
@@ -47,7 +47,6 @@ class ServerHandler:
         self.calculateLoadWeight()
         self.sendRangeRequest()
         self.pushBackToClient(httpServerSelf)
-        pass
 
     # Assign requested ip, port and file path to global variables
     @staticmethod
@@ -81,7 +80,7 @@ class ServerHandler:
         response = con.getresponse()
         serverTimeDefault = self.getNow()
         con.close()
-        RESPONSE_DEFAULT_HEAD = response
+        HEAD_RESPONSE_HEADERS = response
 
     # return current time as timestamp
     @staticmethod
@@ -90,10 +89,10 @@ class ServerHandler:
 
     # Send HEAD request over second connection
     def sendHeadMobile(self):
-        global startTimeMobile, serverTimeMobile, isSecondConnectionAvailable
+        global startTimeMobile, END_STAMP_SECOND, isSecondConnectionAvailable
         try:
             con = socket(AF_INET, SOCK_STREAM)
-            con.bind((MOBILE_IP, MOBILE_PORT))
+            con.bind((SECOND_IP, SECOND_PORT))
             con.connect((REQUESTED_IP, REQUESTED_PORT))
             request = "HEAD / HTTP/1.1" + LINE
             request += "Connection: close" + HEADER
@@ -118,7 +117,7 @@ class ServerHandler:
     def calculateLoadWeight():
         global DEFAULT_RANGE_END, MOBILE_RANGE_START
         defaultStamp = serverTimeDefault - startTimeDefault
-        mobileStamp = serverTimeMobile - startTimeMobile
+        mobileStamp = END_STAMP_SECOND - startTimeMobile
         if mobileStamp != 0:
             defaultLoadRate = round((mobileStamp / (defaultStamp + mobileStamp)), 2)
         else:
@@ -161,7 +160,7 @@ class ServerHandler:
         global RESPONSE_MOBILE
         con = socket(AF_INET, SOCK_STREAM)
         con.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        con.bind((MOBILE_IP, MOBILE_PORT + 1))
+        con.bind((SECOND_IP, SECOND_PORT + 1))
         con.connect((REQUESTED_IP, REQUESTED_PORT))
         request = "GET /" + REQUESTED_FILE + " HTTP/1.1" + LINE
         request += "Connection: close" + LINE

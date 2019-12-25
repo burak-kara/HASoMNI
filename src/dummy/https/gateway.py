@@ -22,7 +22,7 @@ NOW = datetime.now(timezone.utc).timestamp()
 startTimeDefault = NOW
 serverTimeDefault = NOW
 startTimeMobile = NOW
-serverTimeMobile = NOW
+END_STAMP_SECOND = NOW
 
 DEFAULT_RANGE_END = 0
 MOBILE_RANGE_START = 0
@@ -104,7 +104,7 @@ def sendRangeRequest():
 def calculateLoadWeight():
     global DEFAULT_RANGE_END, MOBILE_RANGE_START
     defaultStamp = serverTimeDefault - startTimeDefault
-    mobileStamp = serverTimeMobile - startTimeMobile
+    mobileStamp = END_STAMP_SECOND - startTimeMobile
     if mobileStamp != 0:
         defaultLoadRate = round((mobileStamp / (defaultStamp + mobileStamp)), 2)
     else:
@@ -123,7 +123,7 @@ def assignContentInfo():
 # Send HEAD request over second connection
 # TODO try to use this connection for getting data
 def sendHeadMobile():
-    global startTimeMobile, serverTimeMobile, isSecondConnectionAvailable
+    global startTimeMobile, END_STAMP_SECOND, isSecondConnectionAvailable
     try:
         con = socket(AF_INET, SOCK_STREAM)
         con.bind((MOBILE_IP, MOBILE_PORT))
