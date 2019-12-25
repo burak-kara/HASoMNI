@@ -1,6 +1,6 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from gateway.TestServerHandler import TestServerHandler
-from gateway.WebsiteHandler import WebsiteHttpHandler
+from gateway.WebsiteHandler import WebsiteHandler
 import config.config as cfg
 
 GATEWAY_IP = cfg.primary['ip']
@@ -14,7 +14,7 @@ class Proxy(SimpleHTTPRequestHandler):
         if self.path.startswith("/" + TEST_SERVER_IP + ":" + TEST_SERVER_PORT):
             TestServerHandler(self)
         elif self.path.startswith("/http"):
-            WebsiteHttpHandler(self)
+            WebsiteHandler(self)
         else:
             # TODO implement error 404, 500 vs
             pass

@@ -47,11 +47,12 @@ HEAD_RESPONSE_HEADERS = None
 SOCKET_HEAD_HEADERS = ""
 SOCKET_GET_HEADERS = ""
 
+# to create header
 LINE = "\r\n"
 HEADER = LINE + LINE
 
 
-class WebsiteHttpHandler:
+class WebsiteHandler:
     def __init__(self, httpServerSelf):
         self.assignRequestedPath(httpServerSelf.path[1:])
         self.createSocketHeadHeaders()
