@@ -1,6 +1,6 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-from src.gateway.http.TestServerHandler import TestServerHandler
-from src.gateway.http.WebsiteHandler import WebsiteHttpHandler
+from gateway.TestServerHandler import TestServerHandler
+from gateway.WebsiteHandler import WebsiteHttpHandler
 import config.config as cfg
 
 GATEWAY_IP = cfg.primary['ip']
