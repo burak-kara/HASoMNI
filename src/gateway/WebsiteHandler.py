@@ -270,9 +270,3 @@ class WebsiteHandler:
         httpServerSelf.send_header('Content-Length', str(CONTENT_LENGTH))
         httpServerSelf.end_headers()
         httpServerSelf.wfile.write(RESPONSE)
-
-    @staticmethod
-    def getTime():
-        now = datetime.now()
-        stamp = mktime(now.timetuple())
-        return format_date_time(stamp)
