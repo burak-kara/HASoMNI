@@ -1,9 +1,7 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from gateway.TestServerHandler import TestServerHandler
 from datetime import datetime, timezone
-from wsgiref.handlers import format_date_time
 import requests as req
-from time import mktime
 from socket import *
 import threading
 import ssl
