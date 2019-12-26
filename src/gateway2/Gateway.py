@@ -68,6 +68,7 @@ def handleRequest(self):
     measureBandwidth()
     assignContentInfo()
     calculateLoadWeight()
+    print("After head requests time is: " + str(getCurrentTime()))
     createSocketGetHeaders()
     sendRangeRequest()
     pushBackToClient(self)
@@ -111,13 +112,15 @@ def measureBandwidth():
 
 # Send HEAD request over Primary Connection
 def sendHeadPrimary():
-    print("primary head is started")
+    print("-- primary head is started: " + str(getCurrentTime()))
     global START_STAMP_PRIMARY, HEAD_RESPONSE_HEADERS, END_STAMP_PRIMARY
     START_STAMP_PRIMARY = getCurrentTime()
+    print("-- primary start stamp: " + str(START_STAMP_PRIMARY))
     HEAD_RESPONSE_HEADERS = req.head(HTTP_VERSION + REQUESTED_HOSTNAME + REQUESTED_PATH, verify=IS_VERIFY)
     END_STAMP_PRIMARY = getCurrentTime()
+    print("-- primary end stamp: " + str(END_STAMP_PRIMARY))
     HEAD_RESPONSE_HEADERS = HEAD_RESPONSE_HEADERS.headers
-    print("primary head is done")
+    print("-- primary head is done: " + str(getCurrentTime()))
 
 
 def getCurrentTime():
@@ -126,21 +129,19 @@ def getCurrentTime():
 
 # Send HEAD request over Secondary Connection
 def sendHeadSecondary():
-    print("secondary head is started")
+    print("** secondary head is started: " + str(getCurrentTime()))
     global IS_SECOND_AVAILABLE
     try:
         con = socket(AF_INET, SOCK_STREAM)
-        # TODO can be deleted, possible cause of delay
-        con.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         con.bind((SECOND_IP, SECOND_PORT))
         if IS_VERIFY:
             sendHeadSecondaryHttps(con)
         else:
             sendHeadSecondaryHttp(con)
-        print("secondary head is done")
+        print("** secondary head is done: " + str(getCurrentTime()))
     except Exception as e:
         print(e)
-        print("second connection was not found")
+        print("** second connection was not found: " + str(getCurrentTime()))
         IS_SECOND_AVAILABLE = False
 
 
@@ -154,9 +155,11 @@ def sendHeadSecondaryHttps(con):
     ssl_socket = context.wrap_socket(con, server_hostname=REQUESTED_HOSTNAME)
     ssl_socket.connect((REQUESTED_HOSTNAME, REQUESTED_PORT))
     START_STAMP_SECOND = getCurrentTime()
+    print("** second start stamp: " + str(START_STAMP_SECOND))
     ssl_socket.sendall(SOCKET_HEAD_HEADERS.encode("utf-8"))
-    ssl_socket.recv(1024)
+    ssl_socket.recv(10)
     END_STAMP_SECOND = getCurrentTime()
+    print("** second end stamp: " + str(END_STAMP_SECOND))
     # TODO add shutdowns, any effects?
     # ssl_socket.shutdown(SHUT_RDWR)
     # con.shutdown(SHUT_RDWR)
@@ -199,18 +202,20 @@ def assignContentInfo():
 # Calculate load weight over timestamps
 def calculateLoadWeight():
     global PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_LOAD
-    defaultStamp = END_STAMP_PRIMARY - START_STAMP_PRIMARY
-    mobileStamp = END_STAMP_SECOND - START_STAMP_SECOND
-    print("default stamp: " + str(defaultStamp))
-    print("mobile stamp: " + str(mobileStamp))
-    if mobileStamp != 0:
-        defaultLoadRate = round((mobileStamp / (defaultStamp + mobileStamp)), 2)
+    # primaryStamp = END_STAMP_PRIMARY - START_STAMP_PRIMARY
+    # secondaryStamp = END_STAMP_SECOND - START_STAMP_SECOND
+    primaryStamp = 1
+    secondaryStamp = 1
+    print("-- primary stamp: " + str(primaryStamp))
+    print("** second stamp: " + str(secondaryStamp))
+    if secondaryStamp != 0:
+        defaultLoadRate = round((secondaryStamp / (primaryStamp + secondaryStamp)), 2)
     else:
         defaultLoadRate = 1
     PRIMARY_RANGE_END = round(defaultLoadRate * CONTENT_LENGTH)
     print("content length: " + str(CONTENT_LENGTH))
-    print("primary length: " + str(PRIMARY_RANGE_END))
-    print("secondary length: " + str(CONTENT_LENGTH - PRIMARY_RANGE_END - 1))
+    print("-- primary length: " + str(PRIMARY_RANGE_END))
+    print("** secondary length: " + str(CONTENT_LENGTH - PRIMARY_RANGE_END - 1))
     SECOND_RANGE_START = PRIMARY_RANGE_END + 1
     SECOND_LOAD = CONTENT_LENGTH - SECOND_RANGE_START
 
@@ -232,9 +237,8 @@ def sendRangeRequest():
     defaultThread = threading.Thread(target=sendGetPrimary)
     if IS_SECOND_AVAILABLE and IS_ACCEPT_RANGE:
         mobileThread = threading.Thread(target=sendGetSecondary)
+        mobileThread.start()
     defaultThread.start()
-    if IS_SECOND_AVAILABLE and IS_ACCEPT_RANGE:
-        mobileThread.start()  # TODO check
     defaultThread.join()
     if IS_SECOND_AVAILABLE and IS_ACCEPT_RANGE:
         mobileThread.join()
@@ -243,24 +247,25 @@ def sendRangeRequest():
 
 # Send GET request over Primary Connection
 def sendGetPrimary():
-    print("primary get is started")
+    print("-- primary get is started: " + str(getCurrentTime()))
     global RESPONSE_PRIMARY
+    rangeValue = 'bytes=0-' + str(PRIMARY_RANGE_END)
     headers = {
         "Host": REQUESTED_HOSTNAME, "Accept": "*/*",
-        "User-Agent": "kibitzer", 'Connection': 'Close'
+        "User-Agent": "kibitzer", 'Range': rangeValue, 'Connection': 'Close'
     }
-    if IS_ACCEPT_RANGE:
-        rangeValue = 'bytes=0-' + str(PRIMARY_RANGE_END)
-        headers.update({'Range': rangeValue})
+    # if IS_ACCEPT_RANGE:
+    #     rangeValue = 'bytes=0-' + str(PRIMARY_RANGE_END)
+    #     headers.update({'Range': rangeValue})
 
     RESPONSE_PRIMARY = req.get(HTTP_VERSION + REQUESTED_HOSTNAME + REQUESTED_PATH,
                                headers=headers, verify=True).content
-    print("Primary get is done")
+    print("-- primary get is done: " + str(getCurrentTime()))
 
 
 # Send GET request over Secondary Connection
 def sendGetSecondary():
-    print("secondary get is started")
+    print("** secondary get is started: " + str(getCurrentTime()))
     global RESPONSE_SECOND
     con = socket(AF_INET, SOCK_STREAM)
     con.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -273,7 +278,7 @@ def sendGetSecondary():
         con.close()
     except Exception as e:
         print(str(e))
-    print("Secondary get is done")
+    print("** secondary get is done: " + str(getCurrentTime()))
 
 
 # Send GET request to HTTPS
@@ -286,7 +291,6 @@ def sendGetHttps(con):
     ssl_socket = context.wrap_socket(con, server_hostname=REQUESTED_HOSTNAME)
     ssl_socket.connect((REQUESTED_HOSTNAME, REQUESTED_PORT))
     ssl_socket.sendall(SOCKET_GET_HEADERS.encode("utf-8"))
-    isBody = False
     count = 0
     while True:
         if count >= SECOND_LOAD:
@@ -296,10 +300,8 @@ def sendGetHttps(con):
         if not data:
             print("------ break no data------------")
             break
-        # if isBody:
         count += len(data)
         RESPONSE_SECOND += data
-        # isBody = True
     RESPONSE_SECOND = RESPONSE_SECOND.split(HEADER.encode("utf-8"), 1)[1]
     ssl_socket.close()
     con.close()
