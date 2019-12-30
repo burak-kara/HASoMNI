@@ -68,8 +68,7 @@ def handleRequest(self):
     measureBandwidth()
     assignContentInfo()
     calculateLoadWeight()
-    print("-*-*-*-*-*-*-*- After head requests time is: " +
-          str(getCurrentTime()) + "-*-*-*-*-*-*-*-")
+    print("-*-*-*-*- After head requests, time is: " + str(getCurrentTime()) + "-*-*-*-*-")
     createSocketGetHeaders()
     sendRangeRequest()
     pushBackToClient(self)
@@ -207,11 +206,8 @@ def assignContentInfo():
 # Calculate load weight over timestamps
 def calculateLoadWeight():
     global PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_LOAD
-    # TODO uncomment
     primaryStamp = END_STAMP_PRIMARY - START_STAMP_PRIMARY
     secondaryStamp = END_STAMP_SECOND - START_STAMP_SECOND
-    # primaryStamp = 1
-    # secondaryStamp = 1
     print("-- primary stamp: " + str(primaryStamp))
     print("** second stamp: " + str(secondaryStamp))
     if secondaryStamp != 0:
