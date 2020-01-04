@@ -88,7 +88,9 @@ def assignRequestInfo(requested):
         REQUESTED_PORT = 8080
     REQUESTED_PATH = '/'
     try:
-        REQUESTED_PATH += requested.split("//")[1].split("/", 1)[1]
+        # TODO *** these are for front end handling
+        # somehow with proper links, requests dont visit gateway
+        REQUESTED_PATH += requested.split("//")[1].split("/", 1)[1].split("***")[0]
     except:
         print("no path was found")
 
