@@ -1,14 +1,55 @@
-.webpageContainer {
-    width: 99.5%;
-    height: 100%;
+.webPageContainer {
+    max-width: 99%;
+    min-height: 930px;
     margin-bottom: 0.3%;
-    overflow-y: scroll;
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.30);
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow-y: scroll;
 }
 
-.webpageContainer:hover {
+.webPageContainer:hover {
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.50);
 }
+
+.contentRow {
+    width: 100%;
+    height: 400px;
+    margin-top: 10px;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.30);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+}
+
+.placeholder {
+    text-align: center;
+    background-color: #d0d0d0;
+}
+
+.statsRow {
+    width: 100%;
+    height: 500px;
+    margin-top: 10px;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.30);
+    background-color: white;
+}
+
+.primaryConnection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.primaryConnectionLabel {
+    margin-top: 10px;
+}
+
+.secondaryConnection {
+    background-color: antiquewhite;
+}
+

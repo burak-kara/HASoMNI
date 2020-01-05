@@ -8,7 +8,10 @@ export default class App extends Component {
         super(props);
         this.state = {
             address: "",
-            content: ""
+            url: "",
+            clickCount: 0,
+            primaryCounter: 0,
+            secondaryCounter: 0
         };
     }
 
@@ -16,23 +19,42 @@ export default class App extends Component {
         return (
             <div className="App" style={{height: window.innerHeight}}>
                 <Search handleClick={this.handleClick} handleChange={this.handleChange}/>
-                <Webpage content={this.state.content}/>
+                <Webpage
+                    url={this.state.url}
+                    primaryCounter={this.state.primaryCounter}
+                    secondaryCounter={this.state.secondaryCounter}
+                />
             </div>
         );
     }
 
-    handleChange = (event) => {
-        this.setState({[event.target.name]: event.target.value})
-    };
-
-    // "http://192.168.1.35:8080/http://clips.vorwaerts-gmbh.de/VfE_html5.mp4"
+    // "http://192.168.1.36:8080/http://clips.vorwaerts-gmbh.de/VfE_html5.mp4"
 
     handleClick = () => {
-        console.log(this.state.address);
-        const url = `http://192.168.1.35:8080/${this.state.address}***`;
-        console.log(url);
-        this.setState({
-            content: url
-        });
+        if (this.state.clickCount === 0) {
+            this.setState({
+                url: `http://192.168.1.36:8080/${this.state.address}***`,
+                clickCount: 1
+            });
+            setInterval(() => {
+                this.setState({
+                    primaryCounter: ++this.state.primaryCounter
+                })
+            }, 1000);
+        } else if (this.state.clickCount === 1) {
+            this.setState({
+                url: `http://192.168.1.36:8080/${this.state.address}****`,
+                clickCount: 0
+            });
+            setInterval(() => {
+                this.setState({
+                    secondaryCounter: ++this.state.secondaryCounter
+                })
+            }, 1000);
+        }
+    };
+
+    handleChange = (event) => {
+        this.setState({[event.target.name]: event.target.value})
     };
 }
