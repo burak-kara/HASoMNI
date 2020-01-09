@@ -6,7 +6,7 @@ primary = {
 
 # Secondary connection info
 secondary = {
-    'ip': '192.168.1.37',
+    'ip': '192.168.1.38',
     'port': 8081
 }
 
