@@ -3,52 +3,15 @@ import ReactSpeedometer from "react-d3-speedometer";
 import "./Webpage.css";
 
 export default class Webpage extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            secs: 0
-        }
-    }
-
-    componentDidMount() {
-        this.testCounter();
-    }
-
     render() {
         return (
-            <div className="container-fluid webPageContainer">
-                <div className="row contentRow">
+            <div className="container-fluid page-container">
+                <div className="row content-row">
                     {this.renderContent()}
                 </div>
-                <div className="row statsRow">
-                    <div className="col primaryConnection">
-                        <label className="primaryConnectionLabel">
-                            Single Connection
-                        </label>
-                        <ReactSpeedometer
-                            needleColor="black"
-                            startColor="green"
-                            endColor="red"
-                            needleTransition="easeElastic"
-                            value={this.props.primaryCounter}
-                            maxValue={90}
-                            segments={1000}
-                            maxSegmentLabels={9}
-                            needleTransitionDuration={1000}
-                            needleHeightRatio={0.7}
-                            ringWidth={40}
-                            paddingVertical={20}
-                        />
-                        <label>
-                            Time: {this.props.primaryCounter}
-                        </label>
-                        <label>
-                            Bytes: {this.state.secs}
-                        </label>
-                    </div>
-                    <div className="col secondaryConnection">
-
-                    </div>
+                <div className="row stats-row">
+                    {this.singleConnectionStats()}
+                    {this.hybridConnectionStats()}
                 </div>
             </div>
         );
@@ -70,11 +33,57 @@ export default class Webpage extends Component {
         }
     };
 
-    testCounter = () => {
-        setInterval(() => {
-            this.setState({
-                secs: ++this.state.secs
-            })
-        }, 1000);
+    singleConnectionStats = () => {
+        return (
+            <div className="col stats-column">
+                <label className="stats-title">
+                    Single Connection
+                </label>
+                <ReactSpeedometer
+                    needleColor="black"
+                    startColor="green"
+                    endColor="red"
+                    needleTransition="easeElastic"
+                    value={this.props.singleCounter}
+                    maxValue={60}
+                    segments={1000}
+                    maxSegmentLabels={8}
+                    needleTransitionDuration={1000}
+                    needleHeightRatio={0.7}
+                    ringWidth={40}
+                    paddingVertical={20}
+                />
+                <label>
+                    Bytes: {this.props.singleBytes}
+                </label>
+            </div>
+        );
+    };
+
+    hybridConnectionStats = () => {
+        return (
+            <div className="col stats-column">
+                <label className="stats-title">
+                    Hybrid Connection
+                </label>
+                <ReactSpeedometer
+                    needleColor="black"
+                    startColor="green"
+                    endColor="red"
+                    needleTransition="easeElastic"
+                    value={this.props.hybridCounter}
+                    maxValue={60}
+                    segments={1000}
+                    maxSegmentLabels={8}
+                    needleTransitionDuration={1000}
+                    needleHeightRatio={0.7}
+                    ringWidth={40}
+                    paddingVertical={20}
+                />
+                <label>
+                    Bytes: {this.props.hybridBytes}
+                </label>
+            </div>
+        );
     };
 }
