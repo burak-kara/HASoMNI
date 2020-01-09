@@ -36,6 +36,7 @@ export default class App extends Component {
         this.setState({[event.target.name]: event.target.value})
     };
 
+    // http://3.134.95.115:8080/testVideo
     // http://clips.vorwaerts-gmbh.de/VfE_html5.mp4
 
     // Source: https://github.com/mdn/dom-examples/blob/master/streams/simple-pump/index.html
@@ -53,6 +54,7 @@ export default class App extends Component {
                 } else {
                     this.stopHybridCounter();
                 }
+                let outerThis = this;
                 const reader = response.getReader();
                 return new ReadableStream({
                     async start(controller) {
@@ -62,13 +64,21 @@ export default class App extends Component {
                             if (done) break;
                             controller.enqueue(value);
                             length += value.length;
+                            if (outerThis.state.isSingleClick) {
+                                outerThis.setState({
+                                    hybridBytes: length
+                                });
+                            } else {
+                                outerThis.setState({
+                                    singleBytes: length
+                                });
+                            }
+                            console.log(length);
                         }
                         controller.close();
                         reader.releaseLock();
-                        console.log(length);
-
                     }
-                }.bind(this))
+                })
             })
             .then(response => new Response(response))
             .then(response => response.blob())
@@ -77,12 +87,14 @@ export default class App extends Component {
                 this.setState({
                     url: url
                 });
-                console.log(url);
             })
             .catch(error => console.log(error))
     };
 
     startSingleCounter = () => {
+        this.setState({
+            singleCounter: 0
+        });
         this.timerSingle = setInterval(() => {
             this.setState({
                 singleCounter: ++this.state.singleCounter
@@ -98,6 +110,9 @@ export default class App extends Component {
     };
 
     startHybridCounter = () => {
+        this.setState({
+            hybridCounter: 0
+        });
         this.timerHybrid = setInterval(() => {
             this.setState({
                 hybridCounter: ++this.state.hybridCounter

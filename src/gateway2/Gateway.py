@@ -89,8 +89,9 @@ def assignRequestInfo(requested):
     REQUESTED_PATH = '/'
     try:
         # TODO *** these are for front end handling
+        # REQUESTED_PATH += requested.split("//")[1].split("/", 1)[1].split("***")[0]
         # somehow with proper links, requests dont visit gateway
-        REQUESTED_PATH += requested.split("//")[1].split("/", 1)[1].split("***")[0]
+        REQUESTED_PATH += requested.split("//")[1].split("/", 1)[1]
     except:
         print("no path was found")
 
