@@ -1,8 +1,6 @@
 import os
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-from datetime import datetime
-from wsgiref.handlers import format_date_time
-from time import mktime
+from datetime import datetime, timezone
 
 LOCAL_PATH = '/src/server/static_files'
 SERVER_PATH = '/home/ec2-user/server/'
@@ -15,15 +13,22 @@ SERVER_ADDRESS = '172.31.39.64'
 ADDRESS = SERVER_ADDRESS
 
 
+def getCurrentTime():
+    return datetime.now(timezone.utc).timestamp()
+
+
 def createBody(self, code=200, contentRange=""):
     file = open(getFilePath(self.path), 'rb')
+    print("I opened the file and started to serve it")
     if code == 206:
         ranges = getBeginEnd(contentRange)
+        print("Ranges: " + str(ranges[0]) + " and " + str(ranges[1]))
         file.seek(ranges[0], 0)
-        self.wfile.write(file.read(ranges[1] - ranges[0]))
+        self.wfile.write(file.read(ranges[1] - ranges[0] + 1))
     else:
         self.wfile.write(file.read())
     file.close()
+    print("I closed the file and my file service is done")
 
 
 def getBeginEnd(contentRange):
@@ -69,12 +74,6 @@ def getHeaderValues(path):
     return fileType, size, file
 
 
-def getTime():
-    now = datetime.now()
-    stamp = mktime(now.timetuple())
-    return format_date_time(stamp)
-
-
 def createHeaders(self, code=200, contentRange=""):
     headerValues = getHeaderValues(self.path)
     self.send_response(code)
@@ -94,8 +93,9 @@ def isRangeRequest(headers):
         return True, headerDict["Range"].split("=")[1]
 
 
-class HTTPRequestHandler(SimpleHTTPRequestHandler):
+class Server(SimpleHTTPRequestHandler):
     def do_GET(self):
+        print("I got a new request. my time is: " + str(getCurrentTime()))
         isRange = isRangeRequest(self.headers)
         if not isRange[0]:
             createHeaders(self)
@@ -103,11 +103,13 @@ class HTTPRequestHandler(SimpleHTTPRequestHandler):
         else:
             createHeaders(self, 206, isRange[1])
             createBody(self, 206, isRange[1])
+        print("I handled the request. my time became: " + str(getCurrentTime()))
 
     def do_HEAD(self):
+        print("I got HEAD request")
         createHeaders(self)
 
 
 print("---- Server started. Waiting for incoming requests ----")
-httpWifi = ThreadingHTTPServer((ADDRESS, PORT), HTTPRequestHandler)
+httpWifi = ThreadingHTTPServer((ADDRESS, PORT), Server)
 httpWifi.serve_forever()

@@ -1,14 +1,19 @@
 import React, {Component} from 'react';
 import './App.css';
-import Search from "../search/Search";
-import Webpage from "../webpage/Webpage";
+import Search from "../components/search/Search";
+import Webpage from "../components/webpage/Webpage";
 
-class App extends Component {
+export default class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
             address: "",
-            content: ""
+            url: "",
+            isSingleClick: true,
+            singleCounter: 0,
+            hybridCounter: 0,
+            singleBytes: 0,
+            hybridBytes: 0
         };
     }
 
@@ -16,7 +21,13 @@ class App extends Component {
         return (
             <div className="App" style={{height: window.innerHeight}}>
                 <Search handleClick={this.handleClick} handleChange={this.handleChange}/>
-                <Webpage content={this.state.content}/>
+                <Webpage
+                    url={this.state.url}
+                    singleCounter={this.state.singleCounter}
+                    singleBytes={this.state.singleBytes}
+                    hybridCounter={this.state.hybridCounter}
+                    hybridBytes={this.state.hybridBytes}
+                />
             </div>
         );
     }
@@ -25,27 +36,94 @@ class App extends Component {
         this.setState({[event.target.name]: event.target.value})
     };
 
-    // handleClick = () => {
-    //     fetch(`http://54.91.200.127:8080/34.204.97.0:8080/${this.state.address}`, {
-    //         method: 'GET'
-    //     }).then(response => {
-    //     });
-    // };
+    // http://3.134.95.115:8080/testVideo
+    // http://clips.vorwaerts-gmbh.de/VfE_html5.mp4
 
-    // gets full path with server address and port
-    // TODO whatever given, process it if it is test files serve them
-    // if not serve over google.com like search engine
+    // Source: https://github.com/mdn/dom-examples/blob/master/streams/simple-pump/index.html
     handleClick = () => {
-        let xhr = new XMLHttpRequest();
-        xhr.addEventListener('load', () => {
-            // update the state of the component with the result here
-            this.setState({content: xhr.response}, ()=> {});
-            console.log(xhr.responseText); // TODO delete
+        if (this.state.isSingleClick) {
+            this.startSingleCounter();
+        } else {
+            this.startHybridCounter();
+        }
+        fetch(`http://192.168.1.33:8080/${this.state.address}`)
+            .then(response => response.body)
+            .then(response => {
+                if (this.state.isSingleClick) {
+                    this.stopSingleCounter();
+                } else {
+                    this.stopHybridCounter();
+                }
+                let outerThis = this;
+                const reader = response.getReader();
+                return new ReadableStream({
+                    async start(controller) {
+                        let length = 0;
+                        while (true) {
+                            const {done, value} = await reader.read();
+                            if (done) break;
+                            controller.enqueue(value);
+                            length += value.length;
+                            if (outerThis.state.isSingleClick) {
+                                outerThis.setState({
+                                    hybridBytes: length
+                                });
+                            } else {
+                                outerThis.setState({
+                                    singleBytes: length
+                                });
+                            }
+                            console.log(length);
+                        }
+                        controller.close();
+                        reader.releaseLock();
+                    }
+                })
+            })
+            .then(response => new Response(response))
+            .then(response => response.blob())
+            .then(blob => URL.createObjectURL(blob))
+            .then(url => {
+                this.setState({
+                    url: url
+                });
+            })
+            .catch(error => console.log(error))
+    };
+
+    startSingleCounter = () => {
+        this.setState({
+            singleCounter: 0
         });
-        console.log(this.state.address); // TODO delete
-        xhr.open('GET', `http://${this.state.address}`);
-        xhr.send();
+        this.timerSingle = setInterval(() => {
+            this.setState({
+                singleCounter: ++this.state.singleCounter
+            })
+        }, 1000);
+    };
+
+    stopSingleCounter = () => {
+        clearInterval(this.timerSingle);
+        this.setState({
+            isSingleClick: false
+        })
+    };
+
+    startHybridCounter = () => {
+        this.setState({
+            hybridCounter: 0
+        });
+        this.timerHybrid = setInterval(() => {
+            this.setState({
+                hybridCounter: ++this.state.hybridCounter
+            })
+        }, 1000);
+    };
+
+    stopHybridCounter = () => {
+        clearInterval(this.timerHybrid);
+        this.setState({
+            isSingleClick: true
+        })
     };
 }
-
-export default App;

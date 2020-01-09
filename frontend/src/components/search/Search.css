@@ -6,8 +6,6 @@
     grid-template-columns: 1% 65% 25%;
     grid-column-gap: 1.5%;
     width: 80%;
-    /*height: 8%;*/
-    /*background-color: #09d3ac;*/
 }
 
 .searchBar {

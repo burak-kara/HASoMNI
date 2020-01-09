@@ -1,12 +1,12 @@
 # Primary connection info
 primary = {
-    'ip': '192.168.1.35',
+    'ip': '192.168.1.33',
     'port': 8080
 }
 
 # Secondary connection info
 secondary = {
-    'ip': '192.168.1.37',
+    'ip': '192.168.1.38',
     'port': 8081
 }
 
