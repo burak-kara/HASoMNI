@@ -20,7 +20,7 @@ export default class Webpage extends Component {
     renderContent = () => {
         if (this.props.url && this.props.url !== "") {
             return (
-                <video key={this.props.url} autoPlay={true} controls={true}>
+                <video key={this.props.url} autoPlay={true} controls={true} height="380">
                     <source src={this.props.url}/>
                 </video>
             );
@@ -45,6 +45,7 @@ export default class Webpage extends Component {
                     endColor="red"
                     needleTransition="easeElastic"
                     value={this.props.singleCounter}
+                    // value={51}
                     maxValue={60}
                     segments={1000}
                     maxSegmentLabels={8}
@@ -54,10 +55,17 @@ export default class Webpage extends Component {
                     paddingVertical={20}
                 />
                 <label>
-                    Bytes: {this.props.singleBytes}
+                    {this.props.singleBytes} Bytes
+                </label>
+                <label>
+                    {this.convertToMB(this.props.singleBytes)} MB
                 </label>
             </div>
         );
+    };
+
+    convertToMB = (bytes) => {
+        return (bytes / (1024 * 1024)).toFixed(2);
     };
 
     hybridConnectionStats = () => {
@@ -81,7 +89,10 @@ export default class Webpage extends Component {
                     paddingVertical={20}
                 />
                 <label>
-                    Bytes: {this.props.hybridBytes}
+                    {this.props.hybridBytes} Bytes
+                </label>
+                <label>
+                    {this.convertToMB(this.props.hybridBytes)} MB
                 </label>
             </div>
         );

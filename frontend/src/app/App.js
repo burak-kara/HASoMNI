@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import './App.css';
 import Search from "../components/search/Search";
 import Webpage from "../components/webpage/Webpage";
+import './App.css';
 
 export default class App extends Component {
     constructor(props) {
@@ -46,7 +46,7 @@ export default class App extends Component {
         } else {
             this.startHybridCounter();
         }
-        fetch(`http://192.168.1.33:8080/${this.state.address}`)
+        fetch(`http://192.168.1.35:8080/${this.state.address}`)
             .then(response => response.body)
             .then(response => {
                 if (this.state.isSingleClick) {

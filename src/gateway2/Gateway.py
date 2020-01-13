@@ -1,12 +1,10 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-from gateway.TestServerHandler import TestServerHandler
 from datetime import datetime, timezone
 import requests as req
 from socket import *
 import threading
 import ssl
 import config.config as cfg
-import sys
 
 # init gateway info
 GATEWAY_IP = cfg.primary['ip']
@@ -209,8 +207,10 @@ def assignContentInfo():
 # Calculate load weight over timestamps
 def calculateLoadWeight():
     global PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_LOAD
-    primaryStamp = END_STAMP_PRIMARY - START_STAMP_PRIMARY
-    secondaryStamp = END_STAMP_SECOND - START_STAMP_SECOND
+    # primaryStamp = END_STAMP_PRIMARY - START_STAMP_PRIMARY
+    # secondaryStamp = END_STAMP_SECOND - START_STAMP_SECOND
+    primaryStamp = 0.8
+    secondaryStamp = 1
     print("-- primary stamp: " + str(primaryStamp))
     print("** second stamp: " + str(secondaryStamp))
     if secondaryStamp != 0:
