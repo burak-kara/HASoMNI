@@ -29,7 +29,7 @@ server_address = ('192.168.1.34', 4443)
 httpd = ThreadingHTTPServer(server_address, Proxy)
 httpd.socket = ssl.wrap_socket(httpd.socket,
                                server_side=True,
-                               certfile='D:\\PyCharm Projects\\Senior\\gateway\\https\\server.pem',
+                               certfile='D:\\PyCharm Projects\\Senior\\gateway_old\\https\\server.pem',
                                ssl_version=ssl.PROTOCOL_TLSv1_2)
 print("serving....")
 httpd.serve_forever()
