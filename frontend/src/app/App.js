@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import Search from "../components/search/Search";
-import Webpage from "../components/webpage/Webpage";
+import Page from "../components/page/Page";
+import {GATEWAY_IP} from "../utils/Utils";
 import './App.css';
 
 export default class App extends Component {
@@ -21,7 +22,7 @@ export default class App extends Component {
         return (
             <div className="App" style={{height: window.innerHeight}}>
                 <Search handleClick={this.handleClick} handleChange={this.handleChange}/>
-                <Webpage
+                <Page
                     url={this.state.url}
                     singleCounter={this.state.singleCounter}
                     singleBytes={this.state.singleBytes}
@@ -43,7 +44,7 @@ export default class App extends Component {
         } else {
             this.startHybridCounter();
         }
-        fetch(`http://192.168.1.37:8080/${this.state.address}`)
+        fetch(`${GATEWAY_IP}${this.state.address}`)
             .then(response => response.body)
             .then(response => {
                 if (this.state.isSingleClick) {

@@ -1,8 +1,8 @@
 import React, {Component} from 'react';
 import ReactSpeedometer from "react-d3-speedometer";
-import "./Webpage.css";
+import "./Page.css";
 
-export default class Webpage extends Component {
+export default class Page extends Component {
     render() {
         return (
             <div className="container-fluid page-container">
