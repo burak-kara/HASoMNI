@@ -1,8 +1,8 @@
 import React, {Component} from 'react';
 import ReactSpeedometer from "react-d3-speedometer";
-import "./Webpage.css";
+import "./Page.css";
 
-export default class Webpage extends Component {
+export default class Page extends Component {
     render() {
         return (
             <div className="container-fluid page-container">
@@ -20,7 +20,7 @@ export default class Webpage extends Component {
     renderContent = () => {
         if (this.props.url && this.props.url !== "") {
             return (
-                <video key={this.props.url} autoPlay={true} controls={true}>
+                <video key={this.props.url} autoPlay={true} controls={true} height="380">
                     <source src={this.props.url}/>
                 </video>
             );
@@ -45,6 +45,7 @@ export default class Webpage extends Component {
                     endColor="red"
                     needleTransition="easeElastic"
                     value={this.props.singleCounter}
+                    currentValueText={`${this.props.singleCounter} secs`}
                     maxValue={60}
                     segments={1000}
                     maxSegmentLabels={8}
@@ -54,10 +55,17 @@ export default class Webpage extends Component {
                     paddingVertical={20}
                 />
                 <label>
-                    Bytes: {this.props.singleBytes}
+                    {this.props.singleBytes} Bytes
+                </label>
+                <label>
+                    {this.convertToMB(this.props.singleBytes)} MB
                 </label>
             </div>
         );
+    };
+
+    convertToMB = (bytes) => {
+        return (bytes / (1024 * 1024)).toFixed(2);
     };
 
     hybridConnectionStats = () => {
@@ -72,6 +80,7 @@ export default class Webpage extends Component {
                     endColor="red"
                     needleTransition="easeElastic"
                     value={this.props.hybridCounter}
+                    currentValueText={`${this.props.hybridCounter} secs`}
                     maxValue={60}
                     segments={1000}
                     maxSegmentLabels={8}
@@ -81,7 +90,10 @@ export default class Webpage extends Component {
                     paddingVertical={20}
                 />
                 <label>
-                    Bytes: {this.props.hybridBytes}
+                    {this.props.hybridBytes} Bytes
+                </label>
+                <label>
+                    {this.convertToMB(this.props.hybridBytes)} MB
                 </label>
             </div>
         );

@@ -6,7 +6,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-y: scroll;
 }
 
 .page-container:hover {
@@ -47,9 +46,5 @@
 
 .stats-title {
     margin-top: 10px;
-}
-
-.secondaryConnection {
-    background-color: antiquewhite;
 }
 
