@@ -203,8 +203,6 @@ def calculateLoadWeight():
     global PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_LOAD
     primaryStamp = END_STAMP_PRIMARY - START_STAMP_PRIMARY
     secondaryStamp = END_STAMP_SECOND - START_STAMP_SECOND
-    # primaryStamp = 1
-    # secondaryStamp = 1
     log.info("*** Primary stamp: %s", str(round(primaryStamp, 2)))
     log.info("--- Secondary stamp: %s", str(round(secondaryStamp, 2)))
     if secondaryStamp != 0:
