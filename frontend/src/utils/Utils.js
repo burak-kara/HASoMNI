@@ -1,1 +1,1 @@
-export const GATEWAY_IP = 'http://192.168.1.35:8080/';
+export const GATEWAY_IP = 'http://192.168.43.17:8080/';

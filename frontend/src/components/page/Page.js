@@ -45,7 +45,7 @@ export default class Page extends Component {
                     endColor="red"
                     needleTransition="easeElastic"
                     value={this.props.singleCounter}
-                    // value={51}
+                    currentValueText={`${this.props.singleCounter} secs`}
                     maxValue={60}
                     segments={1000}
                     maxSegmentLabels={8}
@@ -80,6 +80,7 @@ export default class Page extends Component {
                     endColor="red"
                     needleTransition="easeElastic"
                     value={this.props.hybridCounter}
+                    currentValueText={`${this.props.hybridCounter} secs`}
                     maxValue={60}
                     segments={1000}
                     maxSegmentLabels={8}
