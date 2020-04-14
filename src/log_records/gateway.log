@@ -151,26 +151,26 @@
 2020-01-15 11:11:58,564 - ---------------------------------------------------------------------
 
 2020-01-15 11:12:23,104 - Gateway got a new request
-2020-01-15 11:12:23,108 - *** Primary head is started
-2020-01-15 11:12:23,108 - --- Secondary head is started
-2020-01-15 11:12:23,120 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
-2020-01-15 11:12:23,412 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
-2020-01-15 11:12:23,412 - --- Secondary head is done
-2020-01-15 11:12:23,412 - *** Primary head is done
-2020-01-15 11:12:23,416 - *** Primary stamp: 0.3
-2020-01-15 11:12:23,416 - --- Secondary stamp: 0.22
-2020-01-15 11:12:23,416 - Content-Length: 45577410
-2020-01-15 11:12:23,416 - *** Primary load length: 19142512 bytes / 18.26 MB
-2020-01-15 11:12:23,416 - --- Secondary load length: 26434897 bytes / 25.21 MB
-2020-01-15 11:12:23,416 - ++++ Head requests are done ++++
-2020-01-15 11:12:23,416 - --- Secondary GET is started
-2020-01-15 11:12:23,416 - *** Primary GET is started
-2020-01-15 11:12:23,420 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
-2020-01-15 11:12:23,424 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
-2020-01-15 11:12:23,712 - http://commondatastorage.googleapis.com:80 "GET /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 206 19142513
-2020-01-15 11:12:23,728 - http://commondatastorage.googleapis.com:80 "GET /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 206 26434897
-2020-01-15 11:12:27,157 - --- Secondary GET is done
-2020-01-15 11:12:29,582 - *** Primary GET is done
+2020-01-15 11:12:23,108 - * Primary Head Request over Connection I is started
+2020-01-15 11:12:23,108 - - Secondary Head Request over Connection II is started
+2020-01-15 11:12:23,120 - * Starting new HTTP connection (1) HEAD
+2020-01-15 11:12:23,412 - - Starting new HTTP connection (2) HEAD
+2020-01-15 11:12:23,412 - - Secondary Head Request over Connection I is done
+2020-01-15 11:12:23,412 - * Primary Head Request over Connection II is done
+2020-01-15 11:12:23,416 - Head Requests are done
+2020-01-15 11:12:23,416 - * Primary RTT for Connection I: 0.30 seconds
+2020-01-15 11:12:23,416 - - Secondary RTT for Connection I: 0.27 seconds
+2020-01-15 11:12:23,416 - Requested Content-Length: 45577410
+2020-01-15 11:12:23,416 - * Connection I load length: 4224098 bytes / 4.03 MB
+2020-01-15 11:12:23,416 - - Connection II load length: 4693444 bytes / 4.47 MB
+2020-01-15 11:12:23,416 - - Secondary GET Request over Connection II is started
+2020-01-15 11:12:23,416 - * Primary GET Request over Connection I is started
+2020-01-15 11:12:23,420 - Starting new HTTP connection (2): GET
+2020-01-15 11:12:23,424 - Starting new HTTP connection (1): GET
+2020-01-15 11:12:23,712 - GET 206 19142513
+2020-01-15 11:12:23,728 - GET 206 26434897
+2020-01-15 11:12:27,157 - - Secondary GET Request over Connection II is done
+2020-01-15 11:12:29,582 - * Primary GET Request over Connection I is done
 2020-01-15 11:12:29,638 - Response is pushed back to client
 2020-01-15 11:12:29,642 - Total time passed: 6.54 seconds
 2020-01-15 11:12:29,642 - ---------------------------------------------------------------------
