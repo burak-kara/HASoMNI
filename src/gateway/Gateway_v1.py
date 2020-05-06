@@ -374,7 +374,6 @@ class Proxy(SimpleHTTPRequestHandler):
             log.error("Undefined format")
 
 
-log.basicConfig(filename='D:\\PyCharm Projects\\Senior\\src\\log_records\\gateway.log',
-                level=log.DEBUG, format='%(asctime)s - %(message)s')
+log.basicConfig(filename='/log_records/gateway_v1.log', level=log.DEBUG, format='%(asctime)s - %(message)s')
 connection = ThreadingHTTPServer((GATEWAY_IP, GATEWAY_PORT), Proxy)
 connection.serve_forever()
