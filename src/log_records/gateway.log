@@ -160,18 +160,64 @@
 2020-01-15 11:12:23,416 - Head Requests are done
 2020-01-15 11:12:23,416 - * Primary RTT for Connection I: 0.30 seconds
 2020-01-15 11:12:23,416 - - Secondary RTT for Connection I: 0.27 seconds
-2020-01-15 11:12:23,416 - Requested Content-Length: 45577410
+2020-01-15 11:12:23,416 - Requested Content-Length: 26752626
 2020-01-15 11:12:23,416 - * Connection I load length: 4224098 bytes / 4.03 MB
 2020-01-15 11:12:23,416 - - Connection II load length: 4693444 bytes / 4.47 MB
+
 2020-01-15 11:12:23,416 - - Secondary GET Request over Connection II is started
 2020-01-15 11:12:23,416 - * Primary GET Request over Connection I is started
 2020-01-15 11:12:23,420 - Starting new HTTP connection (2): GET
 2020-01-15 11:12:23,424 - Starting new HTTP connection (1): GET
 2020-01-15 11:12:23,712 - GET 206 19142513
 2020-01-15 11:12:23,728 - GET 206 26434897
-2020-01-15 11:12:27,157 - - Secondary GET Request over Connection II is done
-2020-01-15 11:12:29,582 - * Primary GET Request over Connection I is done
-2020-01-15 11:12:29,638 - Response is pushed back to client
-2020-01-15 11:12:29,642 - Total time passed: 6.54 seconds
-2020-01-15 11:12:29,642 - ---------------------------------------------------------------------
+2020-01-15 11:12:25,157 - - Secondary GET Request over Connection II is done
+2020-01-15 11:12:25,582 - * Primary GET Request over Connection I is done
+2020-01-15 11:12:25,642 - Total time passed: 2.16 seconds
+2020-01-15 11:12:25,642 - ------------------------------------------------
+
+2020-01-15 11:12:25,650 - Starting new GET Requests
+2020-01-15 11:12:25,967- * Connection I load length: 4224098 bytes / 4.03 MB
+2020-01-15 11:12:25,967 - - Connection II load length: 4693444 bytes / 4.47 MB
+2020-01-15 11:12:25,967 - - Secondary GET Request over Connection II is started
+2020-01-15 11:12:25,967 - * Primary GET Request over Connection I is started
+2020-01-15 11:12:23,972 - Starting new HTTP connection (2): GET
+2020-01-15 11:12:23,974 - Starting new HTTP connection (1): GET
+2020-01-15 11:12:24,003 - GET 206 19142513
+2020-01-15 11:12:24,007 - GET 206 26434897
+2020-01-15 11:12:26,028 - - Secondary GET Request over Connection II is done
+2020-01-15 11:12:28,031 - * Primary GET Request over Connection I is done
+2020-01-15 11:12:28,143 - Total time passed: 4.06 seconds
+2020-01-15 11:12:28,143 - Connection I took longer than expected
+2020-01-15 11:12:28,149 - ------------------------------------------------
+
+2020-01-15 11:12:28,371 - Reassigning load weights
+2020-01-15 11:12:28,377 - * Primary Head Request over Connection I is started
+2020-01-15 11:12:28,378 - - Secondary Head Request over Connection II is started
+2020-01-15 11:12:28,395 - * Starting new HTTP connection (2) HEAD
+2020-01-15 11:12:28,748 - - Starting new HTTP connection (1) HEAD
+2020-01-15 11:12:28,748 - - Secondary Head Request over Connection II is done
+2020-01-15 11:12:28,748 - * Primary Head Request over Connection I is done
+2020-01-15 11:12:28,757 - Head Requests are done
+2020-01-15 11:12:28,757 - * Primary RTT for Connection I: 0.55 seconds
+2020-01-15 11:12:28,758 - - Secondary RTT for Connection I: 0.32 seconds
+2020-01-15 11:12:28,758 - * Connection I load length: 3280015 bytes / 3.13 MB
+2020-01-15 11:12:28,760 - - Connection II load length: 5637527 bytes / 5.37 MB
+
+2020-01-15 11:12:28,760 - Starting new GET Requests
+2020-01-15 11:12:28,760 - * Connection I load length: 3280015 bytes / 4.03 MB
+2020-01-15 11:12:28,765 - - Connection II load length: 5637527 bytes / 4.47 MB
+2020-01-15 11:12:28,768 - - Secondary GET Request over Connection II is started
+2020-01-15 11:12:29,012 - * Primary GET Request over Connection I is started
+2020-01-15 11:12:29,020 - Starting new HTTP connection (1): GET
+2020-01-15 11:12:29,293 - Starting new HTTP connection (2): GET
+2020-01-15 11:12:29,760 - GET 206 3280015
+2020-01-15 11:12:29,774 - GET 206 5637527
+2020-01-15 11:12:31,124 - - Secondary GET Request over Connection II is done
+2020-01-15 11:12:31,456 - * Primary GET Request over Connection I is done
+2020-01-15 11:12:31,498 - Total time passed: 2.44 seconds
+2020-01-15 11:12:31,498 - ------------------------------------------------
+
+2020-01-15 11:12:31,866- Merged Response is pushed back to client
+2020-01-15 11:12:31,866 - Total time passed: 8.34 seconds
+2020-01-15 11:12:31,874 - ---------------------------------------------------------------------
 
