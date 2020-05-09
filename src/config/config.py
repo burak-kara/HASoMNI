@@ -1,6 +1,6 @@
 # Primary connection info
 primary = {
-    'ip': '192.168.43.17',
+    'ip': '192.168.1.34',
     'port': 8080
 }
 
