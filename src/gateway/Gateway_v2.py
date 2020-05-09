@@ -219,7 +219,7 @@ def getRequestedSource(self):
         log.info("--- Secondary load length: %s bytes / %s MB", str(SECOND_RANGE_END - SECOND_RANGE_START),
                  str(round(convertToMb(SECOND_RANGE_END - SECOND_RANGE_START), 2)))
         sendRangeRequest()
-    pushBackToClient(self)
+        pushBackToClient(self)
 
 
 # Calculate load weights
@@ -295,12 +295,13 @@ def sendGetSecondary():
 # Push back GET request responses to client
 def pushBackToClient(self):
     global REQUEST_HANDLE_TIME
-    self.send_response(200)
+    self.send_response(206)
     self.send_header('Content-Type', CONTENT_TYPE)
     self.send_header('Access-Control-Allow-Origin', '*')
     self.send_header('Content-Length', str(SEGMENT_SIZE))
     self.end_headers()
     self.wfile.write(RESPONSE)
+    # self.wfile.write(bytearray("asdasd", 'utf-8'))
     log.info("Response is pushed back to client")
     REQUEST_HANDLE_TIME = getCurrentTime()
     log.info("Total time passed: %s seconds", str(round(REQUEST_HANDLE_TIME - REQUEST_RECV_TIME, 2)))
