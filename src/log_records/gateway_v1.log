@@ -221,3 +221,45 @@
 2020-01-15 11:12:31,866 - Total time passed: 8.34 seconds
 2020-01-15 11:12:31,874 - ---------------------------------------------------------------------
 
+2020-05-17 21:11:53,517 - Gateway got a new request
+2020-05-17 21:11:53,553 - *** Primary head is started
+2020-05-17 21:11:53,553 - --- Secondary head is started
+2020-05-17 21:11:53,554 - --- Second connection was not found
+2020-05-17 21:11:53,559 - Starting new HTTP connection (1): 192.168.1.34:80
+2020-05-17 21:11:53,560 - http://192.168.1.34:80 "HEAD /test/manifest.mpd HTTP/1.1" 200 0
+2020-05-17 21:11:53,560 - *** Primary head is done
+2020-05-17 21:11:53,561 - *** Primary stamp: 0.01
+2020-05-17 21:11:53,561 - --- Secondary stamp: 0.0
+2020-05-17 21:11:53,561 - Content-Length: 1658
+2020-05-17 21:11:53,561 - *** Primary load length: 1658 bytes / 0.0 MB
+2020-05-17 21:11:53,561 - --- Secondary load length: -1 bytes / -0.0 MB
+2020-05-17 21:11:53,561 - ++++ Head requests are done ++++
+2020-05-17 21:11:53,562 - *** Primary GET is started
+2020-05-17 21:11:53,563 - Starting new HTTP connection (1): 192.168.1.34:80
+2020-05-17 21:11:53,565 - http://192.168.1.34:80 "GET /test/manifest.mpd HTTP/1.1" 206 1658
+2020-05-17 21:11:53,565 - *** Primary GET is done
+2020-05-17 21:11:53,566 - Response is pushed back to client
+2020-05-17 21:11:53,566 - Total time passed: 0.01 seconds
+2020-05-17 21:11:53,566 - ---------------------------------------------------------------------
+
+2020-05-17 21:30:48,092 - Gateway got a new request
+2020-05-17 21:30:48,094 - *** Primary head is started
+2020-05-17 21:30:48,095 - --- Secondary head is started
+2020-05-17 21:30:48,096 - --- Second connection was not found
+2020-05-17 21:30:48,099 - Starting new HTTP connection (1): 192.168.1.34:80
+2020-05-17 21:30:48,101 - http://192.168.1.34:80 "HEAD /test/manifest.mpd HTTP/1.1" 200 0
+2020-05-17 21:30:48,102 - *** Primary head is done
+2020-05-17 21:30:48,103 - *** Primary stamp: 0.01
+2020-05-17 21:30:48,103 - --- Secondary stamp: 0.0
+2020-05-17 21:30:48,103 - Content-Length: 1658
+2020-05-17 21:30:48,103 - *** Primary load length: 1658 bytes / 0.0 MB
+2020-05-17 21:30:48,103 - --- Secondary load length: -1 bytes / -0.0 MB
+2020-05-17 21:30:48,103 - ++++ Head requests are done ++++
+2020-05-17 21:30:48,104 - *** Primary GET is started
+2020-05-17 21:30:48,107 - Starting new HTTP connection (1): 192.168.1.34:80
+2020-05-17 21:30:48,109 - http://192.168.1.34:80 "GET /test/manifest.mpd HTTP/1.1" 206 1658
+2020-05-17 21:30:48,110 - *** Primary GET is done
+2020-05-17 21:30:48,111 - Response is pushed back to client
+2020-05-17 21:30:48,111 - Total time passed: 0.02 seconds
+2020-05-17 21:30:48,112 - ---------------------------------------------------------------------
+
