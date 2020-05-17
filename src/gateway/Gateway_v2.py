@@ -198,7 +198,7 @@ def getRequestedSource(self):
     global PRIMARY_RANGE_START, PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_RANGE_END, SECOND_LOAD, SEGMENT_SIZE
     SEGMENT_SIZE = int(CONTENT_LENGTH / 10)
     segments = list(range(0, CONTENT_LENGTH + 1, SEGMENT_SIZE))
-    print(segments)
+    # print(segments)
     # print(SEGMENT_SIZE)
     # print(SEGMENT_SIZE * 10)
     # print(CONTENT_LENGTH)
@@ -219,6 +219,7 @@ def getRequestedSource(self):
         log.info("--- Secondary load length: %s bytes / %s MB", str(SECOND_RANGE_END - SECOND_RANGE_START),
                  str(round(convertToMb(SECOND_RANGE_END - SECOND_RANGE_START), 2)))
         sendRangeRequest()
+        print(str(i))
         pushBackToClient(self)
 
 
@@ -316,6 +317,8 @@ def convertToMb(num):
 
 
 class Proxy(SimpleHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
     def do_GET(self):
         global REQUEST_RECV_TIME
         if self.path.startswith("/http"):
