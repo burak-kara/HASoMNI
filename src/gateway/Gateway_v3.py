@@ -81,16 +81,12 @@ class MpdLocator(object):
             print(rep_st.items())
             return rep_st
         else:
-            x = self.adaptation_set(rep_addr)
-            if x is not None:
-                x = x.find('mpd:SegmentTemplate', ns)
+            x = self.adaptation_set(rep_addr).find('mpd:SegmentTemplate', ns)
+            # print(x.items())
             return x
 
     def segment_timeline(self, rep_addr):
-        x = self.segment_template(rep_addr)
-        if x is not None:
-            x = x.find('mpd:SegmentTimeline', ns)
-        return x
+        return self.segment_template(rep_addr).find('mpd:SegmentTimeline', ns)
 
     def adaptation_set(self, rep_addr):
         x = self.mpd.findall('mpd:Period', ns)[rep_addr.period_idx].findall('mpd:AdaptationSet', ns)[

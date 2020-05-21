@@ -195,7 +195,7 @@ def assignContentInfo():
 
 
 def getRequestedSource(self):
-    global PRIMARY_RANGE_START, PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_RANGE_END, SECOND_LOAD, SEGMENT_SIZE
+    global PRIMARY_RANGE_START, PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_RANGE_END, SECOND_LOAD, SEGMENT_SIZE, RESPONSE, RESPONSE_PRIMARY
     SEGMENT_SIZE = int(CONTENT_LENGTH / 10)
     segments = list(range(0, CONTENT_LENGTH + 1, SEGMENT_SIZE))
     # print(segments)
@@ -203,6 +203,17 @@ def getRequestedSource(self):
     # print(SEGMENT_SIZE * 10)
     # print(CONTENT_LENGTH)
     defaultLW, secondaryLW = getLoadWeights()
+
+    headers = {
+        "Host": REQUESTED_HOSTNAME, "Accept": "*/*",
+        "User-Agent": "kibitzer", 'Connection': 'Close'
+    }
+
+    if REQUESTED_PORT == 8080:
+        URL = HTTP_VERSION + REQUESTED_HOSTNAME + ":8080" + REQUESTED_PATH
+    else:
+        URL = HTTP_VERSION + REQUESTED_HOSTNAME + REQUESTED_PATH
+
     for i in range(0, 10):
         # print("-------" + str(i))
         PRIMARY_RANGE_START = segments[i]
@@ -218,7 +229,14 @@ def getRequestedSource(self):
                  str(round(convertToMb(PRIMARY_RANGE_END - PRIMARY_RANGE_START), 2)))
         log.info("--- Secondary load length: %s bytes / %s MB", str(SECOND_RANGE_END - SECOND_RANGE_START),
                  str(round(convertToMb(SECOND_RANGE_END - SECOND_RANGE_START), 2)))
-        sendRangeRequest()
+
+        if IS_ACCEPT_RANGE:
+            rangeValue = 'bytes=' + str(PRIMARY_RANGE_START) + '-' + str(PRIMARY_RANGE_END)
+            headers.update({'Range': rangeValue})
+        RESPONSE_PRIMARY = req.get(URL, headers=headers, verify=True)
+        RESPONSE = RESPONSE_PRIMARY.content
+        print(RESPONSE_PRIMARY.status_code)
+        # sendRangeRequest()
         print(str(i))
         pushBackToClient(self)
 
@@ -248,6 +266,7 @@ def sendRangeRequest():
     defaultThread.join()
     if IS_SECOND_AVAILABLE and IS_ACCEPT_RANGE:
         mobileThread.join()
+    print("----------------")
     RESPONSE = RESPONSE_PRIMARY + RESPONSE_SECOND
 
 
