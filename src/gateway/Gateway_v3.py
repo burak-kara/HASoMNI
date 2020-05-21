@@ -28,6 +28,7 @@ REQUESTED_HOSTNAME = ''
 REQUESTED_PATH = ''
 REQUESTED_PORT = cfg.requested['httpPort']
 HTTP_VERSION = cfg.requested['httpVersion']
+REQUEST_RANGE = ''
 IS_ACCEPT_RANGE = True
 IS_VERIFY = False
 CONTENT_LENGTH = 0
@@ -66,12 +67,9 @@ SOCKET_GET_HEADERS = ""
 LINE = "\r\n"
 HEADER = LINE + LINE
 
-# TODO delete
-TOTAL = 0
-
 
 def handleRequest(self):
-    assignRequestInfo(self.path[1:])
+    assignRequestInfo(self.path[1:], self.headers)
     createSocketHeadHeaders()
     measureBandwidth()
     assignContentInfo()
@@ -81,8 +79,8 @@ def handleRequest(self):
 
 # Assign request info
 # Requested string comes in the format of http://site/path or https://site/path
-def assignRequestInfo(requested):
-    global HTTP_VERSION, REQUESTED_PORT, REQUESTED_HOSTNAME, REQUESTED_PATH, IS_VERIFY
+def assignRequestInfo(requested, headers):
+    global HTTP_VERSION, REQUESTED_PORT, REQUESTED_HOSTNAME, REQUESTED_PATH, IS_VERIFY, REQUEST_RANGE
     HTTP_VERSION = requested.split(":")[0] + "://"
     if HTTP_VERSION.__contains__("s"):
         IS_VERIFY = True
@@ -96,6 +94,11 @@ def assignRequestInfo(requested):
         REQUESTED_PATH += requested.split("//")[1].split("/", 1)[1]
     except:
         log.error("No path was found")
+    if headers is not None and headers.get('Range'):
+        REQUEST_RANGE = headers.get('Range')
+        # start, end = asString.split("=")[1].split('-')
+        # print("start, end")
+        # print(type(end))
 
 
 # Create headers to send HEAD request over socket using Secondary Connection
@@ -198,14 +201,19 @@ def assignContentInfo():
 
 
 def getRequestedSource(self):
-    global PRIMARY_RANGE_START, PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_RANGE_END, SECOND_LOAD, SEGMENT_SIZE, RESPONSE, RESPONSE_PRIMARY
+    global PRIMARY_RANGE_START, PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_RANGE_END, SECOND_LOAD, SEGMENT_SIZE, \
+        RESPONSE, REQUEST_HANDLE_TIME, RESPONSE_PRIMARY
     SEGMENT_SIZE = int(CONTENT_LENGTH / 10)
-    segments = list(range(0, CONTENT_LENGTH + 1, SEGMENT_SIZE))
-    # print(segments)
-    # print(SEGMENT_SIZE)
-    # print(SEGMENT_SIZE * 10)
-    # print(CONTENT_LENGTH)
+
     defaultLW, secondaryLW = getLoadWeights()
+    start, end = REQUEST_RANGE.split("=")[1].split('-')
+
+    start = int(start)
+
+    if end:
+        end = int(end)
+    else:
+        end = start + SEGMENT_SIZE
 
     headers = {
         "Host": REQUESTED_HOSTNAME, "Accept": "*/*",
@@ -217,54 +225,40 @@ def getRequestedSource(self):
     else:
         URL = HTTP_VERSION + REQUESTED_HOSTNAME + REQUESTED_PATH
 
-    for i in range(0, 10):
-        # print("-------" + str(i))
-        PRIMARY_RANGE_START = segments[i]
-        PRIMARY_RANGE_END = segments[i] + round(defaultLW * SEGMENT_SIZE) - 1
-        # print("pr start: " + str(PRIMARY_RANGE_START))
-        # print("pr end: " + str(PRIMARY_RANGE_END))
-        SECOND_RANGE_START = PRIMARY_RANGE_END + 1
-        SECOND_RANGE_END = segments[i + 1] - 1
-        SECOND_LOAD = SECOND_RANGE_END - SECOND_RANGE_START
-        # print("sc start: " + str(SECOND_RANGE_START))
-        # print("sc end: " + str(SECOND_RANGE_END))
-        log.info("*** Primary load length: %s bytes / %s MB", str(PRIMARY_RANGE_END - PRIMARY_RANGE_START),
-                 str(round(convertToMb(PRIMARY_RANGE_END - PRIMARY_RANGE_START), 2)))
-        log.info("--- Secondary load length: %s bytes / %s MB", str(SECOND_RANGE_END - SECOND_RANGE_START),
-                 str(round(convertToMb(SECOND_RANGE_END - SECOND_RANGE_START), 2)))
+    PRIMARY_RANGE_START = start
+    PRIMARY_RANGE_END = end + round(defaultLW * SEGMENT_SIZE) - 1
+    SECOND_RANGE_START = PRIMARY_RANGE_END + 1
+    SECOND_RANGE_END = end - 1
+    SECOND_LOAD = SECOND_RANGE_END - SECOND_RANGE_START
 
-        if IS_ACCEPT_RANGE:
-            rangeValue = 'bytes=' + str(PRIMARY_RANGE_START) + '-' + str(PRIMARY_RANGE_END)
-            headers.update({'Range': rangeValue})
-            print("rangeValue")
-            print(rangeValue)
-        RESPONSE_PRIMARY = req.get(URL, headers=headers, verify=True)
-        RESPONSE = RESPONSE_PRIMARY.content
-        print(RESPONSE_PRIMARY.headers['Content-Range'])
-        print(RESPONSE_PRIMARY.headers['Content-Length'])
-        # print(RESPONSE_PRIMARY.status_code)
-        print("bytes " + str(PRIMARY_RANGE_START) + "-" + str(PRIMARY_RANGE_END) + "/" + str(CONTENT_LENGTH))
-        print(SEGMENT_SIZE)
-        # sendRangeRequest()
-        # pushBackToClient(self)
-        global REQUEST_HANDLE_TIME
-        self.send_response(206)
-        self.send_header('Accept-Ranges', "bytes")
-        self.send_header('Content-Type', CONTENT_TYPE)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Content-Range',
-                         "bytes " + str(PRIMARY_RANGE_START) + "-" + str(PRIMARY_RANGE_END) + "/" + str(CONTENT_LENGTH))
-        self.send_header('Content-Length', str(SEGMENT_SIZE))
+    log.info("*** Primary load length: %s bytes / %s MB", str(PRIMARY_RANGE_END - PRIMARY_RANGE_START),
+             str(round(convertToMb(PRIMARY_RANGE_END - PRIMARY_RANGE_START), 2)))
+    log.info("--- Secondary load length: %s bytes / %s MB", str(SECOND_RANGE_END - SECOND_RANGE_START),
+             str(round(convertToMb(SECOND_RANGE_END - SECOND_RANGE_START), 2)))
 
-        self.end_headers()
-        self.wfile.write(RESPONSE)
-        # self.wfile.write(bytearray("asdasd", 'utf-8'))
-        log.info("Response is pushed back to client")
-        REQUEST_HANDLE_TIME = getCurrentTime()
-        log.info("Total time passed: %s seconds", str(round(REQUEST_HANDLE_TIME - REQUEST_RECV_TIME, 2)))
-        RESPONSE_PRIMARY = b""
-        RESPONSE = b""
-        print("-------------------------------------------------------------------------------------------")
+    if IS_ACCEPT_RANGE:
+        rangeValue = 'bytes=' + str(PRIMARY_RANGE_START) + '-' + str(PRIMARY_RANGE_END)
+        headers.update({'Range': rangeValue})
+
+    RESPONSE_PRIMARY = req.get(URL, headers=headers, verify=True)
+    RESPONSE = RESPONSE_PRIMARY.content
+
+    self.send_response(206)
+    self.send_header('Accept-Ranges', "bytes")
+    self.send_header('Content-Type', CONTENT_TYPE)
+    self.send_header('Access-Control-Allow-Origin', '*')
+    self.send_header('Content-Range',
+                     "bytes " + str(PRIMARY_RANGE_START) + "-" + str(PRIMARY_RANGE_END) + "/" + str(CONTENT_LENGTH))
+    self.send_header('Content-Length', str(SEGMENT_SIZE))
+
+    self.end_headers()
+    self.wfile.write(RESPONSE)
+    log.info("Response is pushed back to client")
+    REQUEST_HANDLE_TIME = getCurrentTime()
+    log.info("Total time passed: %s seconds", str(round(REQUEST_HANDLE_TIME - REQUEST_RECV_TIME, 2)))
+    RESPONSE_PRIMARY = b""
+    RESPONSE = b""
+    print("-------------------------------------------------------------------------------------------")
 
 
 # Calculate load weights
@@ -279,6 +273,11 @@ def getLoadWeights():
     else:
         defaultLoadRate = 1
     return defaultLoadRate, 1 - defaultLoadRate
+
+
+def getStart():
+    start, end = REQUEST_RANGE.split("=")[1].split('-')
+    pass
 
 
 # Send GET requests over two connection as Range Requests
@@ -368,15 +367,15 @@ class Proxy(SimpleHTTPRequestHandler):
     def do_GET(self):
         global REQUEST_RECV_TIME
         if self.path.startswith("/http"):
-            log.info("Gateway got a new request")
+            log.info("--------------------------Gateway got a new request-------------------------------")
             REQUEST_RECV_TIME = getCurrentTime()
             handleRequest(self)
-            log.info("---------------------------------------------------------------------\n")
+            log.info("---------------------------- DONE -----------------------------------------\n")
         else:
             log.error("Undefined format")
 
 
-log.basicConfig(filename='D:\\PyCharm Projects\\Senior\\src\\log_records\\gateway_v2.log', level=log.DEBUG,
+log.basicConfig(filename='D:\\PyCharm Projects\\Senior\\src\\log_records\\gateway_v3.log', level=log.DEBUG,
                 format='%(asctime)s - %(message)s')
 connection = ThreadingHTTPServer((GATEWAY_IP, GATEWAY_PORT), Proxy)
 connection.serve_forever()

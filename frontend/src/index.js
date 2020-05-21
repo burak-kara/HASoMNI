@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import App from "./app/App";
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import "video-react/dist/video-react.css";
+// import "video-react/dist/video-react.css";
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(<App/>, document.getElementById('root'));

@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
 import ReactSpeedometer from "react-d3-speedometer";
 import "./Page.css";
-import { Player } from 'video-react';
+import './player.scss';
+import {Player} from 'video-react';
 
 export default class Page extends Component {
     render() {
@@ -11,10 +12,10 @@ export default class Page extends Component {
                     {/*{this.renderContent()}*/}
                     {this.player()}
                 </div>
-                <div className="row stats-row">
-                    {this.singleConnectionStats()}
-                    {this.hybridConnectionStats()}
-                </div>
+                {/*<div className="row stats-row">*/}
+                {/*    {this.singleConnectionStats()}*/}
+                {/*    {this.hybridConnectionStats()}*/}
+                {/*</div>*/}
             </div>
         );
     };
@@ -22,8 +23,6 @@ export default class Page extends Component {
     player = () => {
         return (
             <Player
-                playsInline
-                poster="/assets/poster.png"
                 src="http://192.168.1.34:8080/http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
             />
         );
