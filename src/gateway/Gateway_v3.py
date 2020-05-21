@@ -203,7 +203,7 @@ def assignContentInfo():
 def getRequestedSource(self):
     global PRIMARY_RANGE_START, PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_RANGE_END, SECOND_LOAD, SEGMENT_SIZE, \
         RESPONSE, REQUEST_HANDLE_TIME, RESPONSE_PRIMARY
-    SEGMENT_SIZE = int(CONTENT_LENGTH / 10)
+    SEGMENT_SIZE = int(CONTENT_LENGTH / 20)
 
     defaultLW, secondaryLW = getLoadWeights()
     start, end = REQUEST_RANGE.split("=")[1].split('-')
@@ -250,12 +250,14 @@ def getRequestedSource(self):
     self.send_header('Content-Range',
                      "bytes " + str(PRIMARY_RANGE_START) + "-" + str(PRIMARY_RANGE_END) + "/" + str(CONTENT_LENGTH))
     self.send_header('Content-Length', str(SEGMENT_SIZE))
-
-    self.end_headers()
-    self.wfile.write(RESPONSE)
-    log.info("Response is pushed back to client")
-    REQUEST_HANDLE_TIME = getCurrentTime()
-    log.info("Total time passed: %s seconds", str(round(REQUEST_HANDLE_TIME - REQUEST_RECV_TIME, 2)))
+    try:
+        self.end_headers()
+        self.wfile.write(RESPONSE)
+        log.info("Response is pushed back to client")
+        REQUEST_HANDLE_TIME = getCurrentTime()
+        log.info("Total time passed: %s seconds", str(round(REQUEST_HANDLE_TIME - REQUEST_RECV_TIME, 2)))
+    except:
+        log.error("**************** Connection aborted ******************")
     RESPONSE_PRIMARY = b""
     RESPONSE = b""
     print("-------------------------------------------------------------------------------------------")
@@ -273,11 +275,6 @@ def getLoadWeights():
     else:
         defaultLoadRate = 1
     return defaultLoadRate, 1 - defaultLoadRate
-
-
-def getStart():
-    start, end = REQUEST_RANGE.split("=")[1].split('-')
-    pass
 
 
 # Send GET requests over two connection as Range Requests
