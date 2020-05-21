@@ -66,6 +66,9 @@ SOCKET_GET_HEADERS = ""
 LINE = "\r\n"
 HEADER = LINE + LINE
 
+# TODO delete
+TOTAL = 0
+
 
 def handleRequest(self):
     assignRequestInfo(self.path[1:])
@@ -233,12 +236,35 @@ def getRequestedSource(self):
         if IS_ACCEPT_RANGE:
             rangeValue = 'bytes=' + str(PRIMARY_RANGE_START) + '-' + str(PRIMARY_RANGE_END)
             headers.update({'Range': rangeValue})
+            print("rangeValue")
+            print(rangeValue)   
         RESPONSE_PRIMARY = req.get(URL, headers=headers, verify=True)
         RESPONSE = RESPONSE_PRIMARY.content
-        print(RESPONSE_PRIMARY.status_code)
+        print(RESPONSE_PRIMARY.headers['Content-Range'])
+        print(RESPONSE_PRIMARY.headers['Content-Length'])
+        # print(RESPONSE_PRIMARY.status_code)
+        print("bytes " + str(PRIMARY_RANGE_START) + "-" + str(PRIMARY_RANGE_END) + "/" + str(CONTENT_LENGTH))
+        print(SEGMENT_SIZE)
         # sendRangeRequest()
-        print(str(i))
-        pushBackToClient(self)
+        # pushBackToClient(self)
+        global REQUEST_HANDLE_TIME
+        self.send_response(206)
+        self.send_header('Accept-Ranges', "bytes")
+        self.send_header('Content-Type', CONTENT_TYPE)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Content-Range',
+                         "bytes " + str(PRIMARY_RANGE_START) + "-" + str(PRIMARY_RANGE_END) + "/" + str(CONTENT_LENGTH))
+        self.send_header('Content-Length', str(SEGMENT_SIZE))
+
+        self.end_headers()
+        self.wfile.write(RESPONSE)
+        # self.wfile.write(bytearray("asdasd", 'utf-8'))
+        log.info("Response is pushed back to client")
+        REQUEST_HANDLE_TIME = getCurrentTime()
+        log.info("Total time passed: %s seconds", str(round(REQUEST_HANDLE_TIME - REQUEST_RECV_TIME, 2)))
+        RESPONSE_PRIMARY = b""
+        RESPONSE = b""
+        print("-------------------------------------------------------------------------------------------")
 
 
 # Calculate load weights
@@ -318,6 +344,7 @@ def pushBackToClient(self):
     self.send_response(206)
     self.send_header('Content-Type', CONTENT_TYPE)
     self.send_header('Access-Control-Allow-Origin', '*')
+    self.send_header('Content-Range', "bytes " + str(SEGMENT_SIZE) + "/" + str(CONTENT_LENGTH))
     self.send_header('Content-Length', str(SEGMENT_SIZE))
     self.end_headers()
     self.wfile.write(RESPONSE)

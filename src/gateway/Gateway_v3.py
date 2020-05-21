@@ -1,330 +1,382 @@
-#!/usr/bin/env python
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from requests_toolbelt.adapters.source import SourceAddressAdapter
+from datetime import datetime, timezone
+import config.config as cfg
+import requests as req
+import logging as log
+from socket import *
+import threading
+import ssl
 
-import os.path
+# init gateway info
+GATEWAY_IP = cfg.primary['ip']
+GATEWAY_PORT = cfg.primary['port']
 
-import time
-import logging
-import argparse
-import requests
-import xml.etree.ElementTree
-import copy
+# init test server info
+TEST_SERVER_IP = cfg.server['ip']
+TEST_SERVER_PORT = str(cfg.server['port'])
 
-from termcolor import colored
+# init connection info
+PRIMARY_IP = cfg.primary['ip']
+PRIMARY_PORT = cfg.primary['port']
+SECOND_IP = cfg.secondary['ip']
+SECOND_PORT = cfg.secondary['port']
+IS_SECOND_AVAILABLE = True
 
-logging.VERBOSE = (logging.INFO + logging.DEBUG) // 2
+# init request info
+REQUESTED_HOSTNAME = ''
+REQUESTED_PATH = ''
+REQUESTED_PORT = cfg.requested['httpPort']
+HTTP_VERSION = cfg.requested['httpVersion']
+IS_ACCEPT_RANGE = True
+IS_VERIFY = False
+CONTENT_LENGTH = 0
+CONTENT_TYPE = ""
 
-logger = logging.getLogger('dash-proxy')
+# init timestamps
+CURRENT_TIME = datetime.now(timezone.utc).timestamp()
+START_STAMP_PRIMARY = CURRENT_TIME
+END_STAMP_PRIMARY = CURRENT_TIME
+START_STAMP_SECOND = CURRENT_TIME
+END_STAMP_SECOND = CURRENT_TIME
+REQUEST_RECV_TIME = CURRENT_TIME
+REQUEST_HANDLE_TIME = CURRENT_TIME
 
-ns = {'mpd': 'urn:mpeg:dash:schema:mpd:2011'}
+# init range boundaries
+PRIMARY_RANGE_START = 0
+PRIMARY_RANGE_END = 0
+SECOND_RANGE_START = 0
+SECOND_RANGE_END = 0
+SECOND_LOAD = 0
+SEGMENT_SIZE = 0
+
+# init get request responses to keep them as bytes
+RESPONSE_PRIMARY = b""
+RESPONSE_SECOND = b""
+RESPONSE = b""
+
+# init head request response
+HEAD_RESPONSE_HEADERS = None
+
+# init socket request headers
+SOCKET_HEAD_HEADERS = ""
+SOCKET_GET_HEADERS = ""
+
+# constants to create headers
+LINE = "\r\n"
+HEADER = LINE + LINE
+
+# TODO delete
+TOTAL = 0
 
 
-class Formatter(logging.Formatter):
-    def __init__(self, fmt=None, datefmt=None):
-        super(Formatter, self).__init__(fmt, datefmt)
-
-    def format(self, record):
-        color = None
-        if record.levelno == logging.ERROR:
-            color = 'red'
-        if record.levelno == logging.INFO:
-            color = 'green'
-        if record.levelno == logging.WARNING:
-            color = 'yellow'
-        if color:
-            return colored(record.msg, color)
-        else:
-            return record.msg
+def handleRequest(self):
+    assignRequestInfo(self.path[1:])
+    createSocketHeadHeaders()
+    measureBandwidth()
+    assignContentInfo()
+    log.info("++++ Head requests are done ++++")
+    getRequestedSource(self)
 
 
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-formatter = Formatter()
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+# Assign request info
+# Requested string comes in the format of http://site/path or https://site/path
+def assignRequestInfo(requested):
+    global HTTP_VERSION, REQUESTED_PORT, REQUESTED_HOSTNAME, REQUESTED_PATH, IS_VERIFY
+    HTTP_VERSION = requested.split(":")[0] + "://"
+    if HTTP_VERSION.__contains__("s"):
+        IS_VERIFY = True
+        REQUESTED_PORT = cfg.requested['httpsPort']
+    REQUESTED_HOSTNAME = requested.split("//")[1].split("/")[0]
+    if REQUESTED_HOSTNAME.__contains__(":"):
+        REQUESTED_HOSTNAME = REQUESTED_HOSTNAME.split(":")[0]
+        REQUESTED_PORT = 8080
+    REQUESTED_PATH = '/'
+    try:
+        REQUESTED_PATH += requested.split("//")[1].split("/", 1)[1]
+    except:
+        log.error("No path was found")
 
 
-def baseUrl(url):
-    idx = url.rfind('/')
-    if idx >= 0:
-        return url[:idx + 1]
+# Create headers to send HEAD request over socket using Secondary Connection
+def createSocketHeadHeaders():
+    global SOCKET_HEAD_HEADERS
+    SOCKET_HEAD_HEADERS = "HEAD " + REQUESTED_PATH + " HTTP/1.1" + LINE
+    SOCKET_HEAD_HEADERS += "Host: " + REQUESTED_HOSTNAME + LINE
+    SOCKET_HEAD_HEADERS += "Accept: */*" + LINE
+    SOCKET_HEAD_HEADERS += "User-Agent: kibitzer" + LINE
+    SOCKET_HEAD_HEADERS += "Connection: Close" + HEADER
+
+
+# Measure bandwidth using HEAD requests over two connections
+def measureBandwidth():
+    defaultThread = threading.Thread(target=sendHeadPrimary)
+    mobileThread = threading.Thread(target=sendHeadSecondary)
+    defaultThread.start()
+    mobileThread.start()
+    defaultThread.join()
+    mobileThread.join()
+
+
+# Send HEAD request over Primary Connection
+def sendHeadPrimary():
+    log.info("*** Primary head is started")
+    global START_STAMP_PRIMARY, HEAD_RESPONSE_HEADERS, END_STAMP_PRIMARY
+    START_STAMP_PRIMARY = getCurrentTime()
+    if REQUESTED_PORT == 8080:
+        URL = HTTP_VERSION + REQUESTED_HOSTNAME + ":8080" + REQUESTED_PATH
     else:
-        return url
+        URL = HTTP_VERSION + REQUESTED_HOSTNAME + REQUESTED_PATH
+    HEAD_RESPONSE_HEADERS = req.head(URL, verify=IS_VERIFY)
+    END_STAMP_PRIMARY = getCurrentTime()
+    HEAD_RESPONSE_HEADERS = HEAD_RESPONSE_HEADERS.headers
+    log.info("*** Primary head is done")
 
 
-class RepAddr(object):
-    def __init__(self, period_idx, adaptation_set_idx, representation_idx):
-        self.period_idx = period_idx
-        self.adaptation_set_idx = adaptation_set_idx
-        self.representation_idx = representation_idx
-
-    def __str__(self):
-        return 'Representation (period=%d adaptation-set=%d representation=%d)' % (
-            self.period_idx, self.adaptation_set_idx, self.representation_idx)
-
-
-class MpdLocator(object):
-    def __init__(self, mpd):
-        self.mpd = mpd
-
-    def representation(self, rep_addr):
-        x = self.adaptation_set(rep_addr).findall('mpd:Representation', ns)[rep_addr.representation_idx]
-        print("mpdloca _> ")
-        print(x.items())
-        return x
-
-    def segment_template(self, rep_addr):
-        rep_st = self.representation(rep_addr).find('mpd:SegmentTemplate', ns)
-        print("rep_st.items()")
-        print(rep_st)
-        if rep_st is not None:
-            print("rep_st")
-            print(rep_st.items())
-            return rep_st
+# Send HEAD request over Secondary Connection
+def sendHeadSecondary():
+    log.info("--- Secondary head is started")
+    global IS_SECOND_AVAILABLE
+    try:
+        con = socket(AF_INET, SOCK_STREAM)
+        con.bind((SECOND_IP, SECOND_PORT))
+        if IS_VERIFY:
+            sendHeadSecondaryHttps(con)
         else:
-            x = self.adaptation_set(rep_addr).find('mpd:SegmentTemplate', ns)
-            # print(x.items())
-            return x
-
-    def segment_timeline(self, rep_addr):
-        return self.segment_template(rep_addr).find('mpd:SegmentTimeline', ns)
-
-    def adaptation_set(self, rep_addr):
-        x = self.mpd.findall('mpd:Period', ns)[rep_addr.period_idx].findall('mpd:AdaptationSet', ns)[
-            rep_addr.adaptation_set_idx]
-        print("set")
-        return x
+            sendHeadSecondaryHttp(con)
+        log.info("--- Secondary head is done")
+    except:
+        log.info("--- Second connection was not found")
+        IS_SECOND_AVAILABLE = False
 
 
-class HasLogger(object):
-    def verbose(self, msg):
-        self.logger.log(logging.VERBOSE, msg)
+# Send HEAD request to HTTPS sources
+def sendHeadSecondaryHttps(con):
+    global START_STAMP_SECOND, END_STAMP_SECOND
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.check_hostname = True
+    context.load_default_certs()
+    ssl_socket = context.wrap_socket(con, server_hostname=REQUESTED_HOSTNAME)
+    ssl_socket.connect((REQUESTED_HOSTNAME, REQUESTED_PORT))
+    START_STAMP_SECOND = getCurrentTime()
+    ssl_socket.sendall(SOCKET_HEAD_HEADERS.encode("utf-8"))
+    ssl_socket.recv(10)
+    END_STAMP_SECOND = getCurrentTime()
+    ssl_socket.close()
+    con.close()
 
-    def info(self, msg):
-        self.logger.log(logging.INFO, msg)
 
-    def debug(self, msg):
-        self.logger.log(logging.DEBUG, msg)
+# Send HEAD request to HTTP
+def sendHeadSecondaryHttp(con):
+    global START_STAMP_SECOND, END_STAMP_SECOND
+    con.connect((REQUESTED_HOSTNAME, REQUESTED_PORT))
+    START_STAMP_SECOND = getCurrentTime()
+    con.sendall(SOCKET_HEAD_HEADERS.encode('utf-8'))
+    con.recv(10)
+    END_STAMP_SECOND = getCurrentTime()
+    con.close()
 
-    def warning(self, msg):
-        self.logger.log(logging.WARNING, msg)
 
-    def error(self, msg):
-        self.logger.log(logging.ERROR, msg)
+# Check HEAD request responses and assign content info
+def assignContentInfo():
+    global IS_ACCEPT_RANGE, CONTENT_LENGTH, CONTENT_TYPE
+    try:
+        if HEAD_RESPONSE_HEADERS["accept-ranges"].lower() == "none":
+            IS_ACCEPT_RANGE = False
+    except:
+        log.error("Accept-Range header was not found")
+        IS_ACCEPT_RANGE = False
+    try:
+        CONTENT_LENGTH = int(HEAD_RESPONSE_HEADERS["content-length"])
+    except:
+        log.error("Content-Length header was not found")
+    try:
+        CONTENT_TYPE = HEAD_RESPONSE_HEADERS["content-type"]
+    except:
+        log.error("Content-Type header was not found")
 
 
-class DashProxy(HasLogger):
+def getRequestedSource(self):
+    global PRIMARY_RANGE_START, PRIMARY_RANGE_END, SECOND_RANGE_START, SECOND_RANGE_END, SECOND_LOAD, SEGMENT_SIZE, RESPONSE, RESPONSE_PRIMARY
+    SEGMENT_SIZE = int(CONTENT_LENGTH / 10)
+    segments = list(range(0, CONTENT_LENGTH + 1, SEGMENT_SIZE))
+    # print(segments)
+    # print(SEGMENT_SIZE)
+    # print(SEGMENT_SIZE * 10)
+    # print(CONTENT_LENGTH)
+    defaultLW, secondaryLW = getLoadWeights()
 
-    def __init__(self, mpd, output_dir, download, save_mpds=False):
-        self.logger = logger
+    headers = {
+        "Host": REQUESTED_HOSTNAME, "Accept": "*/*",
+        "User-Agent": "kibitzer", 'Connection': 'Close'
+    }
 
-        self.mpd = mpd
-        self.output_dir = output_dir
-        self.download = download
-        self.save_mpds = save_mpds
-        self.i_refresh = 0
+    if REQUESTED_PORT == 8080:
+        URL = HTTP_VERSION + REQUESTED_HOSTNAME + ":8080" + REQUESTED_PATH
+    else:
+        URL = HTTP_VERSION + REQUESTED_HOSTNAME + REQUESTED_PATH
 
-        self.downloaders = {}
+    for i in range(0, 10):
+        # print("-------" + str(i))
+        PRIMARY_RANGE_START = segments[i]
+        PRIMARY_RANGE_END = segments[i] + round(defaultLW * SEGMENT_SIZE) - 1
+        # print("pr start: " + str(PRIMARY_RANGE_START))
+        # print("pr end: " + str(PRIMARY_RANGE_END))
+        SECOND_RANGE_START = PRIMARY_RANGE_END + 1
+        SECOND_RANGE_END = segments[i + 1] - 1
+        SECOND_LOAD = SECOND_RANGE_END - SECOND_RANGE_START
+        # print("sc start: " + str(SECOND_RANGE_START))
+        # print("sc end: " + str(SECOND_RANGE_END))
+        log.info("*** Primary load length: %s bytes / %s MB", str(PRIMARY_RANGE_END - PRIMARY_RANGE_START),
+                 str(round(convertToMb(PRIMARY_RANGE_END - PRIMARY_RANGE_START), 2)))
+        log.info("--- Secondary load length: %s bytes / %s MB", str(SECOND_RANGE_END - SECOND_RANGE_START),
+                 str(round(convertToMb(SECOND_RANGE_END - SECOND_RANGE_START), 2)))
 
-    def run(self):
-        logger.log(logging.INFO, 'Running dash proxy for stream %s. Output goes in %s' % (self.mpd, self.output_dir))
-        self.refresh_mpd()
+        if IS_ACCEPT_RANGE:
+            rangeValue = 'bytes=' + str(PRIMARY_RANGE_START) + '-' + str(PRIMARY_RANGE_END)
+            headers.update({'Range': rangeValue})
+            print("rangeValue")
+            print(rangeValue)
+        RESPONSE_PRIMARY = req.get(URL, headers=headers, verify=True)
+        RESPONSE = RESPONSE_PRIMARY.content
+        print(RESPONSE_PRIMARY.headers['Content-Range'])
+        print(RESPONSE_PRIMARY.headers['Content-Length'])
+        # print(RESPONSE_PRIMARY.status_code)
+        print("bytes " + str(PRIMARY_RANGE_START) + "-" + str(PRIMARY_RANGE_END) + "/" + str(CONTENT_LENGTH))
+        print(SEGMENT_SIZE)
+        # sendRangeRequest()
+        # pushBackToClient(self)
+        global REQUEST_HANDLE_TIME
+        self.send_response(206)
+        self.send_header('Accept-Ranges', "bytes")
+        self.send_header('Content-Type', CONTENT_TYPE)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Content-Range',
+                         "bytes " + str(PRIMARY_RANGE_START) + "-" + str(PRIMARY_RANGE_END) + "/" + str(CONTENT_LENGTH))
+        self.send_header('Content-Length', str(SEGMENT_SIZE))
 
-    def refresh_mpd(self, after=0):
-        retry_interval = 10
-        self.i_refresh += 1
-        if after > 0:
-            time.sleep(after)
+        self.end_headers()
+        self.wfile.write(RESPONSE)
+        # self.wfile.write(bytearray("asdasd", 'utf-8'))
+        log.info("Response is pushed back to client")
+        REQUEST_HANDLE_TIME = getCurrentTime()
+        log.info("Total time passed: %s seconds", str(round(REQUEST_HANDLE_TIME - REQUEST_RECV_TIME, 2)))
+        RESPONSE_PRIMARY = b""
+        RESPONSE = b""
+        print("-------------------------------------------------------------------------------------------")
 
-        print("self.mpd: ->")
-        print(self.mpd)
-        r = requests.get(self.mpd)
-        if r.status_code < 200 or r.status_code >= 300:
-            print('Cannot GET the MPD. Server returned %s. Retrying after %ds' % (r.status_code, retry_interval))
-            # logger.log(logging.WARNING,
-            #            'Cannot GET the MPD. Server returned %s. Retrying after %ds' % (r.status_code, retry_interval))
-            self.refresh_mpd(after=retry_interval)
 
-        xml.etree.ElementTree.register_namespace('', ns['mpd'])
-        mpd = xml.etree.ElementTree.fromstring(r.text)
+# Calculate load weights
+def getLoadWeights():
+    primaryStamp = END_STAMP_PRIMARY - START_STAMP_PRIMARY
+    secondaryStamp = END_STAMP_SECOND - START_STAMP_SECOND
+    log.info("*** Primary stamp: %s", str(round(primaryStamp, 2)))
+    log.info("--- Secondary stamp: %s", str(round(secondaryStamp, 2)))
+    log.info("Content-Length: %s", str(CONTENT_LENGTH))
+    if secondaryStamp != 0:
+        defaultLoadRate = round((secondaryStamp / (primaryStamp + secondaryStamp)), 2)
+    else:
+        defaultLoadRate = 1
+    return defaultLoadRate, 1 - defaultLoadRate
 
-        print("mpd")
-        print(mpd.items())
-        self.handle_mpd(mpd)
 
-    def get_base_url(self, mpd):
-        base_url = baseUrl(self.mpd)
-        location = mpd.find('mpd:Location', ns)
-        if location is not None:
-            base_url = baseUrl(location.text)
-        baseUrlNode = mpd.find('mpd:BaseUrl', ns)
-        if baseUrlNode:
-            if baseUrlNode.text.startswith('http://') or baseUrlNode.text.startswith('https://'):
-                base_url = baseUrl(baseUrlNode.text)
-            else:
-                base_url = base_url + baseUrlNode.text
-        return base_url
+# Send GET requests over two connection as Range Requests
+def sendRangeRequest():
+    global RESPONSE
+    defaultThread = threading.Thread(target=sendGetPrimary)
+    if IS_SECOND_AVAILABLE and IS_ACCEPT_RANGE:
+        mobileThread = threading.Thread(target=sendGetSecondary)
+        mobileThread.start()
+    defaultThread.start()
+    defaultThread.join()
+    if IS_SECOND_AVAILABLE and IS_ACCEPT_RANGE:
+        mobileThread.join()
+    print("----------------")
+    RESPONSE = RESPONSE_PRIMARY + RESPONSE_SECOND
 
-    def handle_mpd(self, mpd):
-        original_mpd = copy.deepcopy(mpd)
 
-        print(ns)
-        periods = mpd.findall('mpd:Period', ns)
-        print("periods")
-        print(periods[0].items())
-        print('mpd=%s' % (periods,))
-        print('Found %d periods choosing the 1st one' % (len(periods),))
-        # logger.log(logging.INFO, 'mpd=%s' % (periods,))
-        # logger.log(logging.VERBOSE, 'Found %d periods choosing the 1st one' % (len(periods),))
-        period = periods[0]
-        for as_idx, adaptation_set in enumerate(period.findall('mpd:AdaptationSet', ns)):
-            for rep_idx, representation in enumerate(adaptation_set.findall('mpd:Representation', ns)):
-                print('Found representation with id %s' % (representation.attrib.get('id', 'UKN'),))
-                self.verbose('Found representation with id %s' % (representation.attrib.get('id', 'UKN'),))
-                rep_addr = RepAddr(0, as_idx, rep_idx)
-                self.ensure_downloader(mpd, rep_addr)
+# Send GET request over Primary Connection
+def sendGetPrimary():
+    log.info("*** Primary GET is started")
+    global RESPONSE_PRIMARY
+    headers = {
+        "Host": REQUESTED_HOSTNAME, "Accept": "*/*",
+        "User-Agent": "kibitzer", 'Connection': 'Close'
+    }
+    if IS_ACCEPT_RANGE:
+        rangeValue = 'bytes=' + str(PRIMARY_RANGE_START) + '-' + str(PRIMARY_RANGE_END)
+        headers.update({'Range': rangeValue})
+    if REQUESTED_PORT == 8080:
+        URL = HTTP_VERSION + REQUESTED_HOSTNAME + ":8080" + REQUESTED_PATH
+    else:
+        URL = HTTP_VERSION + REQUESTED_HOSTNAME + REQUESTED_PATH
+    RESPONSE_PRIMARY = req.get(URL,
+                               headers=headers, verify=True).content
+    log.info("*** Primary GET is done")
 
-        print(original_mpd)
-        self.write_output_mpd(original_mpd)
 
-        minimum_update_period = mpd.attrib.get('minimumUpdatePeriod', '')
-        if minimum_update_period:
-            # TODO parse minimum_update_period
-            self.refresh_mpd(after=5)
+# Send GET request over Secondary Connection
+def sendGetSecondary():
+    log.info("--- Secondary GET is started")
+    global RESPONSE_SECOND
+    headers = {
+        "Host": REQUESTED_HOSTNAME, "Accept": "*/*",
+        "User-Agent": "kibitzer", 'Connection': 'Close'
+    }
+    if IS_ACCEPT_RANGE:
+        rangeValue = "bytes=" + str(SECOND_RANGE_START) + "-" + str(SECOND_RANGE_END)
+        headers.update({'Range': rangeValue})
+    if REQUESTED_PORT == 8080:
+        URL = HTTP_VERSION + REQUESTED_HOSTNAME + ":8080" + REQUESTED_PATH
+    else:
+        URL = HTTP_VERSION + REQUESTED_HOSTNAME + REQUESTED_PATH
+    s = req.Session()
+    s.mount('http://', SourceAddressAdapter(SECOND_IP))
+    RESPONSE_SECOND = s.get(URL, headers=headers, verify=True).content
+
+    log.info("--- Secondary GET is done")
+
+
+# Push back GET request responses to client
+def pushBackToClient(self):
+    global REQUEST_HANDLE_TIME
+    self.send_response(206)
+    self.send_header('Content-Type', CONTENT_TYPE)
+    self.send_header('Access-Control-Allow-Origin', '*')
+    self.send_header('Content-Range', "bytes " + str(SEGMENT_SIZE) + "/" + str(CONTENT_LENGTH))
+    self.send_header('Content-Length', str(SEGMENT_SIZE))
+    self.end_headers()
+    self.wfile.write(RESPONSE)
+    # self.wfile.write(bytearray("asdasd", 'utf-8'))
+    log.info("Response is pushed back to client")
+    REQUEST_HANDLE_TIME = getCurrentTime()
+    log.info("Total time passed: %s seconds", str(round(REQUEST_HANDLE_TIME - REQUEST_RECV_TIME, 2)))
+
+
+def getCurrentTime():
+    return datetime.now(timezone.utc).timestamp()
+
+
+def convertToMb(num):
+    return num / (1024 * 1024)
+
+
+class Proxy(SimpleHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
+    def do_GET(self):
+        global REQUEST_RECV_TIME
+        if self.path.startswith("/http"):
+            log.info("Gateway got a new request")
+            REQUEST_RECV_TIME = getCurrentTime()
+            handleRequest(self)
+            log.info("---------------------------------------------------------------------\n")
         else:
-            self.info('VOD MPD. Nothing more to do. Stopping...')
-
-    def ensure_downloader(self, mpd, rep_addr):
-        print("self.downloaders")
-        print(self.downloaders)
-        if rep_addr in self.downloaders:
-            print('A downloader for %s already started' % (rep_addr,))
-            self.verbose('A downloader for %s already started' % (rep_addr,))
-        else:
-            self.info('Starting a downloader for %s' % (rep_addr,))
-            downloader = DashDownloader(self, rep_addr)
-            print("rep_addr")
-            print(rep_addr)
-            self.downloaders[rep_addr] = downloader
-            downloader.handle_mpd(mpd, self.get_base_url(mpd))
-
-    def write_output_mpd(self, mpd):
-        self.info('Writing the update MPD file')
-        content = xml.etree.ElementTree.tostring(mpd, encoding="utf-8").decode("utf-8")
-        dest = os.path.join(self.output_dir, 'manifest.mpd')
-
-        with open(dest, 'wt') as f:
-            f.write(content)
-
-        if self.save_mpds:
-            dest = os.path.join(self.output_dir, 'manifest.{}.mpd'.format(self.i_refresh))
-            with open(dest, 'wt') as f:
-                f.write(content)
+            log.error("Undefined format")
 
 
-class DashDownloader(HasLogger):
-    def __init__(self, proxy, rep_addr):
-        self.logger = logger
-        self.proxy = proxy
-        self.rep_addr = rep_addr
-        self.mpd_base_url = ''
-        self.initialization_downloaded = False
-
-    def handle_mpd(self, mpd, base_url):
-        self.mpd_base_url = base_url
-        print(base_url)
-        self.mpd = MpdLocator(mpd)
-        print(mpd.items())
-
-        print("self.rep_addrrrrrrr")
-        print(self.rep_addr)
-        rep = self.mpd.representation(self.rep_addr)
-        segment_template = self.mpd.segment_template(self.rep_addr)
-        print(segment_template)
-        segment_timeline = self.mpd.segment_timeline(self.rep_addr)
-
-        initialization_template = segment_template.attrib.get('initialization', '')
-        if initialization_template and not self.initialization_downloaded:
-            self.initialization_downloaded = True
-            self.download_template(initialization_template, rep)
-
-        segments = copy.deepcopy(segment_timeline.findall('mpd:S', ns))
-        idx = 0
-        for segment in segments:
-            duration = int(segment.attrib.get('d', '0'))
-            repeat = int(segment.attrib.get('r', '0'))
-            idx = idx + 1
-            for _ in range(0, repeat):
-                elem = xml.etree.ElementTree.Element('{urn:mpeg:dash:schema:mpd:2011}S', attrib={'d': duration})
-                segment_timeline.insert(idx, elem)
-                self.verbose('appding a new elem')
-                idx = idx + 1
-
-        media_template = segment_template.attrib.get('media', '')
-        nex_time = 0
-        for segment in segment_timeline.findall('mpd:S', ns):
-            current_time = int(segment.attrib.get('t', '-1'))
-            if current_time == -1:
-                segment.attrib['t'] = next_time
-            else:
-                next_time = current_time
-            next_time += int(segment.attrib.get('d', '0'))
-            self.download_template(media_template, rep, segment)
-
-    def download_template(self, template, representation=None, segment=None):
-        dest = self.render_template(template, representation, segment)
-        dest_url = self.full_url(dest)
-        self.info('requesting %s from %s' % (dest, dest_url))
-        r = requests.get(dest_url)
-        if 200 <= r.status_code < 300:
-            self.write(dest, r.content)
-
-        else:
-            self.error('cannot download %s server returned %d' % (dest_url, r.status_code))
-
-    def render_template(self, template, representation=None, segment=None):
-        template = template.replace('$RepresentationID$', '{representation_id}')
-        template = template.replace('$Time$', '{time}')
-
-        args = {}
-        if representation is not None:
-            args['representation_id'] = representation.attrib.get('id', '')
-        if segment is not None:
-            args['time'] = segment.attrib.get('t', '')
-
-        template = template.format(**args)
-        return template
-
-    def full_url(self, dest):
-        return self.mpd_base_url + dest  # TODO remove hardcoded arrd
-
-    def write(self, dest, content):
-        dest = dest[0:dest.rfind('?')]
-        dest = os.path.join(self.proxy.output_dir, dest)
-        f = open(dest, 'wb')
-        f.write(content)
-        f.close()
-
-
-def run(args):
-    logger.setLevel(logging.VERBOSE if args.v else logging.INFO)
-    proxy = DashProxy(mpd=args.mpd,
-                      output_dir=args.o,
-                      download=args.d,
-                      save_mpds=args.save_individual_mpds)
-    return proxy.run()
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("mpd")
-    parser.add_argument("-v", action="store_true")
-    parser.add_argument("-d", action="store_true")
-    parser.add_argument("-o", default='.')
-    parser.add_argument("--save-individual-mpds", action="store_true")
-    args = parser.parse_args()
-
-    run(args)
-
-
-if __name__ == '__main__':
-    main()
+log.basicConfig(filename='D:\\PyCharm Projects\\Senior\\src\\log_records\\gateway_v2.log', level=log.DEBUG,
+                format='%(asctime)s - %(message)s')
+connection = ThreadingHTTPServer((GATEWAY_IP, GATEWAY_PORT), Proxy)
+connection.serve_forever()
