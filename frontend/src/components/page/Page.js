@@ -1,13 +1,15 @@
 import React, {Component} from 'react';
 import ReactSpeedometer from "react-d3-speedometer";
 import "./Page.css";
+import { Player } from 'video-react';
 
 export default class Page extends Component {
     render() {
         return (
             <div className="container-fluid page-container">
                 <div className="row content-row">
-                    {this.renderContent()}
+                    {/*{this.renderContent()}*/}
+                    {this.player()}
                 </div>
                 <div className="row stats-row">
                     {this.singleConnectionStats()}
@@ -16,6 +18,16 @@ export default class Page extends Component {
             </div>
         );
     };
+
+    player = () => {
+        return (
+            <Player
+                playsInline
+                poster="/assets/poster.png"
+                src="http://192.168.1.34:8080/http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
+            />
+        );
+    }
 
     renderContent = () => {
         if (this.props.url && this.props.url !== "") {

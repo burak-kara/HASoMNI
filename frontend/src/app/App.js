@@ -38,13 +38,13 @@ export default class App extends Component {
     };
 
     // Source: https://github.com/mdn/dom-examples/blob/master/streams/simple-pump/index.html
-    handleClick = () => {
+    handleClick = async () => {
         if (this.state.isSingleClick) {
             this.startSingleCounter();
         } else {
             this.startHybridCounter();
         }
-        fetch(`${GATEWAY_IP}${this.state.address}`)
+        await fetch(`${GATEWAY_IP}${this.state.address}`, {keepalive: true})
             .then(response => response.body)
             .then(response => {
                 if (this.state.isSingleClick) {
