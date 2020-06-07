@@ -3,6 +3,7 @@ import ReactSpeedometer from "react-d3-speedometer";
 import "./Page.css";
 import './player.scss';
 import {Player} from 'video-react';
+import styled from 'styled-components';
 
 export default class Page extends Component {
     render() {
@@ -21,9 +22,10 @@ export default class Page extends Component {
     };
 
     player = () => {
+        const VideoPlayer = styled(Player)`padding-top: 0 !important;`;
         return (
-            <Player
-                src="http://192.168.1.34:8080/http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
+            <VideoPlayer
+                src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
             />
         );
     }

@@ -4,9 +4,7 @@ from datetime import datetime, timezone
 import config.config as cfg
 import requests as req
 import logging as log
-from socket import *
 import threading
-import ssl
 
 # init gateway info
 GATEWAY_IP = cfg.primary['ip']
@@ -188,9 +186,11 @@ def assignLoadWeights():
     log.info("*** Primary stamp: %s", str(round(primaryStamp, 2)))
     log.info("--- Secondary stamp: %s", str(round(secondaryStamp, 2)))
     log.info("Content-Length: %s", str(CONTENT_LENGTH))
-    SEGMENT_SIZE = int(CONTENT_LENGTH / 5)
-    if secondaryStamp != 0:
+    SEGMENT_SIZE = int(CONTENT_LENGTH / 10)
+    if secondaryStamp >= 0:
         defaultLoadRate = round((secondaryStamp / (primaryStamp + secondaryStamp)), 2)
+        # TODO change
+        # defaultLoadRate = 0.7
     else:
         defaultLoadRate = 1
 
