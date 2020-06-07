@@ -70,6 +70,7 @@ COUNTER = 0
 
 
 def handleRequest(self):
+    print(self.path)
     assignRequestInfo(self.path[1:], self.headers)
     createSocketHeadHeaders()
     measureBandwidth()

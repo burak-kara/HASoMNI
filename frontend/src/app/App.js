@@ -37,57 +37,61 @@ export default class App extends Component {
         this.setState({[event.target.name]: event.target.value})
     };
 
-    // Source: https://github.com/mdn/dom-examples/blob/master/streams/simple-pump/index.html
-    handleClick = async () => {
-        if (this.state.isSingleClick) {
-            this.startSingleCounter();
-        } else {
-            this.startHybridCounter();
-        }
-        await fetch(`${GATEWAY_IP}${this.state.address}`, {keepalive: true})
-            .then(response => response.body)
-            .then(response => {
-                if (this.state.isSingleClick) {
-                    this.stopSingleCounter();
-                } else {
-                    this.stopHybridCounter();
-                }
-                let outerThis = this;
-                const reader = response.getReader();
-                return new ReadableStream({
-                    async start(controller) {
-                        let length = 0;
-                        while (true) {
-                            const {done, value} = await reader.read();
-                            if (done) break;
-                            controller.enqueue(value);
-                            length += value.length;
-                            if (outerThis.state.isSingleClick) {
-                                outerThis.setState({
-                                    hybridBytes: length
-                                });
-                            } else {
-                                outerThis.setState({
-                                    singleBytes: length
-                                });
-                            }
-                            console.log(length);
-                        }
-                        controller.close();
-                        reader.releaseLock();
-                    }
-                })
-            })
-            .then(response => new Response(response))
-            .then(response => response.blob())
-            .then(blob => URL.createObjectURL(blob))
-            .then(url => {
-                this.setState({
-                    url: url
-                });
-            })
-            .catch(error => console.log(error))
+    handleClick = () => {
+        this.setState({url: `${GATEWAY_IP}${this.state.address}`})
     };
+
+    // Source: https://github.com/mdn/dom-examples/blob/master/streams/simple-pump/index.html
+    // handleClick = () => {
+    //     if (this.state.isSingleClick) {
+    //         this.startSingleCounter();
+    //     } else {
+    //         this.startHybridCounter();
+    //     }
+    //     fetch(`${GATEWAY_IP}${this.state.address}`)
+    //         .then(response => response.body)
+    //         .then(response => {
+    //             if (this.state.isSingleClick) {
+    //                 this.stopSingleCounter();
+    //             } else {
+    //                 this.stopHybridCounter();
+    //             }
+    //             let outerThis = this;
+    //             const reader = response.getReader();
+    //             return new ReadableStream({
+    //                 async start(controller) {
+    //                     let length = 0;
+    //                     while (true) {
+    //                         const {done, value} = await reader.read();
+    //                         if (done) break;
+    //                         controller.enqueue(value);
+    //                         length += value.length;
+    //                         if (outerThis.state.isSingleClick) {
+    //                             outerThis.setState({
+    //                                 hybridBytes: length
+    //                             });
+    //                         } else {
+    //                             outerThis.setState({
+    //                                 singleBytes: length
+    //                             });
+    //                         }
+    //                         console.log(length);
+    //                     }
+    //                     controller.close();
+    //                     reader.releaseLock();
+    //                 }
+    //             })
+    //         })
+    //         .then(response => new Response(response))
+    //         .then(response => response.blob())
+    //         .then(blob => URL.createObjectURL(blob))
+    //         .then(url => {
+    //             this.setState({
+    //                 url: url
+    //             });
+    //         })
+    //         .catch(error => console.log(error))
+    // };
 
     startSingleCounter = () => {
         this.setState({

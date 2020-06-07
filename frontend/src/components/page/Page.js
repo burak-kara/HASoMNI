@@ -6,25 +6,43 @@ import styled from 'styled-components';
 
 export default class Page extends Component {
     render() {
-        const VideoPlayer = styled(Player)`
-        width: 50% !important;
-        padding-top: 400px !important;
-        `;
         return (
             <div className="container-fluid page-container">
                 <div className="row content-row">
-                    <div className="col content-col">
-                        <VideoPlayer
-                            src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
-                        />
-                    </div>
+                    {this.renderContent()}
                 </div>
-                {/*<div className="row stats-row">*/}
-                {/*    {this.singleConnectionStats()}*/}
-                {/*    {this.hybridConnectionStats()}*/}
-                {/*</div>*/}
+                <div className="row stats-row">
+                    {this.singleConnectionStats()}
+                    {this.hybridConnectionStats()}
+                </div>
             </div>
         );
+    };
+
+    renderContent = () => {
+        if (this.props.url && this.props.url !== "") {
+            const VideoPlayer = styled(Player)`
+            width: 50% !important;
+            padding-top: 400px !important;
+            `;
+
+            console.log("url:");
+            console.log(this.props.url);
+            return (
+                <div className="col content-col">
+                    <VideoPlayer
+                        src={this.props.url}
+                        // src="http://192.168.1.35:8080/http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
+                    />
+                </div>
+            );
+        } else {
+            return (
+                <div className="placeholder">
+                    Video content will be here
+                </div>
+            );
+        }
     };
 
     singleConnectionStats = () => {
