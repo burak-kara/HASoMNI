@@ -1,2 +1,2 @@
 # Senior Project
-Senior Project, Real Time Streaming over Hybrid Access
+Senior Project, HTTP Adaptive Streaming over Multiple Network Interfaces
