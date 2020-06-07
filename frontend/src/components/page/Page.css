@@ -17,12 +17,14 @@
     height: 400px;
     margin-top: 10px;
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.30);
-    padding-top: 50px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     background-color: white;
+}
+
+.content-col {
+    padding: 0 !important;
+    display: flex;
+    justify-content: center;
+    max-height: 400px !important;
 }
 
 .placeholder {

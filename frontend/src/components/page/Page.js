@@ -1,17 +1,23 @@
 import React, {Component} from 'react';
 import ReactSpeedometer from "react-d3-speedometer";
 import "./Page.css";
-import './player.scss';
 import {Player} from 'video-react';
 import styled from 'styled-components';
 
 export default class Page extends Component {
     render() {
+        const VideoPlayer = styled(Player)`
+        width: 50% !important;
+        padding-top: 400px !important;
+        `;
         return (
             <div className="container-fluid page-container">
                 <div className="row content-row">
-                    {/*{this.renderContent()}*/}
-                    {this.player()}
+                    <div className="col content-col">
+                        <VideoPlayer
+                            src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
+                        />
+                    </div>
                 </div>
                 {/*<div className="row stats-row">*/}
                 {/*    {this.singleConnectionStats()}*/}
@@ -19,31 +25,6 @@ export default class Page extends Component {
                 {/*</div>*/}
             </div>
         );
-    };
-
-    player = () => {
-        const VideoPlayer = styled(Player)`padding-top: 0 !important;`;
-        return (
-            <VideoPlayer
-                src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
-            />
-        );
-    }
-
-    renderContent = () => {
-        if (this.props.url && this.props.url !== "") {
-            return (
-                <video key={this.props.url} autoPlay={true} controls={true} height="380">
-                    <source src={this.props.url}/>
-                </video>
-            );
-        } else {
-            return (
-                <div className="placeholder">
-                    Video content will be here
-                </div>
-            );
-        }
     };
 
     singleConnectionStats = () => {
