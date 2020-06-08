@@ -3,3 +3,18 @@
   flex-direction: column;
   align-items: center;
 }
+
+.main-navigator {
+
+}
+
+.main-navigator-row {
+  height: 100px !important;
+}
+
+.main-navigator-col {
+  height: 100vh !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

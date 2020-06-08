@@ -14,26 +14,27 @@
 
 .content-row {
     width: 100%;
-    height: 400px;
     margin-top: 10px;
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.30);
     background-color: white;
 }
 
 .content-col {
-    padding: 0 !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    max-height: 400px !important;
+    max-width: 50% !important;
+    margin-left: 25% !important;
+    align-content: center;
 }
 
 .placeholder {
     text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background-color: #d0d0d0;
 }
 
 .stats-row {
+    position: relative;
     width: 100%;
     height: 500px;
     margin-top: 10px;

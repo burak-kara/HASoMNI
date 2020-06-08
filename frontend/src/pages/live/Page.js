@@ -1,10 +1,10 @@
 import React, {Component} from 'react';
 import ReactSpeedometer from "react-d3-speedometer";
+import {Replay} from "vimond-replay";
+import ShakaVideoStreamer from 'vimond-replay/video-streamer/shaka-player';
 import "./Page.css";
-import {Player} from 'video-react';
-import styled from 'styled-components';
 
-export default class Page extends Component {
+export default class LivePage extends Component {
     render() {
         return (
             <div className="container-fluid page-container">
@@ -21,24 +21,20 @@ export default class Page extends Component {
 
     renderContent = () => {
         if (this.props.url && this.props.url !== "") {
-            const VideoPlayer = styled(Player)`
-            width: 50% !important;
-            padding-top: 400px !important;
-            `;
-
-            console.log("url:");
-            console.log(this.props.url);
             return (
                 <div className="col content-col">
-                    <VideoPlayer
-                        src={this.props.url}
-                        // src="http://192.168.1.35:8080/http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
-                    />
+                    <Replay
+                        // source={this.props.url}
+                        source="https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd"
+                        initialPlaybackProps={{ isPaused: true }}
+                    >
+                        <ShakaVideoStreamer />
+                    </Replay>
                 </div>
             );
         } else {
             return (
-                <div className="placeholder">
+                <div className="col placeholder">
                     Video content will be here
                 </div>
             );
