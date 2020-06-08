@@ -39,42 +39,4 @@ export default class Vod extends Component {
     handleClick = () => {
         this.setState({url: `${GATEWAY_IP}${this.state.address}`})
     };
-
-    startSingleCounter = () => {
-        this.setState({
-            singleCounter: 0,
-            singleBytes: 0
-        });
-        this.timerSingle = setInterval(() => {
-            this.setState({
-                singleCounter: ++this.state.singleCounter
-            })
-        }, 1000);
-    };
-
-    stopSingleCounter = () => {
-        clearInterval(this.timerSingle);
-        this.setState({
-            isSingleClick: false
-        })
-    };
-
-    startHybridCounter = () => {
-        this.setState({
-            hybridCounter: 0,
-            hybridBytes: 0
-        });
-        this.timerHybrid = setInterval(() => {
-            this.setState({
-                hybridCounter: ++this.state.hybridCounter
-            })
-        }, 1000);
-    };
-
-    stopHybridCounter = () => {
-        clearInterval(this.timerHybrid);
-        this.setState({
-            isSingleClick: true
-        })
-    };
 }

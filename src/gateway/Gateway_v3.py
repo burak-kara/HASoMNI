@@ -70,7 +70,6 @@ COUNTER = 0
 
 
 def handleRequest(self):
-    print(self.path)
     assignRequestInfo(self.path[1:], self.headers)
     createSocketHeadHeaders()
     measureBandwidth()
@@ -78,7 +77,6 @@ def handleRequest(self):
     log.info("++++ Head requests are done ++++")
     assignLoadWeights()
     sendRangeRequest()
-    # sendGetPrimary()
     pushBackToClient(self)
 
 
@@ -115,8 +113,8 @@ def createSocketHeadHeaders():
 
 # Measure bandwidth using HEAD requests over two connections
 def measureBandwidth():
-    defaultThread = threading.Thread(target=sendHeadPrimary)
-    mobileThread = threading.Thread(target=sendHeadSecondary)
+    defaultThread = threading.Thread(target=sendHeadPrimary, daemon=True)
+    mobileThread = threading.Thread(target=sendHeadSecondary, daemon=True)
     defaultThread.start()
     mobileThread.start()
     defaultThread.join()

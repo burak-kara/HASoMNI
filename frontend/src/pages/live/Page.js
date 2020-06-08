@@ -31,7 +31,7 @@ const LivePage = props => {
         return (
             <div className="col stats-column">
                 <label className="stats-title">
-                    Single Connection
+                    Single Interface
                 </label>
                 <ReactSpeedometer
                     needleColor="black"
@@ -64,7 +64,7 @@ const LivePage = props => {
         return (
             <div className="col stats-column">
                 <label className="stats-title">
-                    Hybrid Connection
+                    Multiple Interfaces
                 </label>
                 <ReactSpeedometer
                     needleColor="black"
