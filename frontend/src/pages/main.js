@@ -4,7 +4,7 @@ import { useHistory } from 'react-router-dom';
 const Main = () => {
     const history = useHistory();
     return (
-        <div className="container-fluid main-navigator">
+        <div className="container-fluid">
             <div className="row main-navigator-row">
                 <div className="col-6 main-navigator-col">
                     <button className="btn btn-primary" onClick={() => history.push("/vod")}>VoD</button>

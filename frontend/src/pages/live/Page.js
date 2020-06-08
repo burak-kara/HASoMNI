@@ -1,34 +1,20 @@
-import React, {Component} from 'react';
+import React from 'react';
 import ReactSpeedometer from "react-d3-speedometer";
 import {Replay} from "vimond-replay";
 import ShakaVideoStreamer from 'vimond-replay/video-streamer/shaka-player';
 import "./Page.css";
 
-export default class LivePage extends Component {
-    render() {
-        return (
-            <div className="container-fluid page-container">
-                <div className="row content-row">
-                    {this.renderContent()}
-                </div>
-                <div className="row stats-row">
-                    {this.singleConnectionStats()}
-                    {this.hybridConnectionStats()}
-                </div>
-            </div>
-        );
-    };
+const LivePage = props => {
 
-    renderContent = () => {
-        if (this.props.url && this.props.url !== "") {
+    const renderContent = () => {
+        if (props.url && props.url !== "") {
             return (
                 <div className="col content-col">
                     <Replay
-                        // source={this.props.url}
                         source="https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd"
-                        initialPlaybackProps={{ isPaused: true }}
+                        initialPlaybackProps={{isPaused: true}}
                     >
-                        <ShakaVideoStreamer />
+                        <ShakaVideoStreamer/>
                     </Replay>
                 </div>
             );
@@ -41,7 +27,7 @@ export default class LivePage extends Component {
         }
     };
 
-    singleConnectionStats = () => {
+    const singleConnectionStats = () => {
         return (
             <div className="col stats-column">
                 <label className="stats-title">
@@ -52,8 +38,8 @@ export default class LivePage extends Component {
                     startColor="green"
                     endColor="red"
                     needleTransition="easeElastic"
-                    value={this.props.singleCounter}
-                    currentValueText={`${this.props.singleCounter} secs`}
+                    value={props.singleCounter}
+                    currentValueText={`${props.singleCounter} secs`}
                     maxValue={60}
                     segments={1000}
                     maxSegmentLabels={8}
@@ -63,20 +49,18 @@ export default class LivePage extends Component {
                     paddingVertical={20}
                 />
                 <label>
-                    {this.props.singleBytes} Bytes
+                    {props.singleBytes} Bytes
                 </label>
                 <label>
-                    {this.convertToMB(this.props.singleBytes)} MB
+                    {convertToMB(props.singleBytes)} MB
                 </label>
             </div>
         );
     };
 
-    convertToMB = (bytes) => {
-        return (bytes / (1024 * 1024)).toFixed(2);
-    };
+    const convertToMB = (bytes) => (bytes / (1024 * 1024)).toFixed(2);
 
-    hybridConnectionStats = () => {
+    const hybridConnectionStats = () => {
         return (
             <div className="col stats-column">
                 <label className="stats-title">
@@ -87,8 +71,8 @@ export default class LivePage extends Component {
                     startColor="green"
                     endColor="red"
                     needleTransition="easeElastic"
-                    value={this.props.hybridCounter}
-                    currentValueText={`${this.props.hybridCounter} secs`}
+                    value={props.hybridCounter}
+                    currentValueText={`${props.hybridCounter} secs`}
                     maxValue={60}
                     segments={1000}
                     maxSegmentLabels={8}
@@ -98,12 +82,27 @@ export default class LivePage extends Component {
                     paddingVertical={20}
                 />
                 <label>
-                    {this.props.hybridBytes} Bytes
+                    {props.hybridBytes} Bytes
                 </label>
                 <label>
-                    {this.convertToMB(this.props.hybridBytes)} MB
+                    {convertToMB(props.hybridBytes)} MB
                 </label>
             </div>
         );
     };
+
+    return (
+        <div className="container-fluid page-container">
+
+            <div className="row content-row">
+                {renderContent()}
+            </div>
+            <div className="row stats-row">
+                {singleConnectionStats()}
+                {hybridConnectionStats()}
+            </div>
+        </div>
+    );
 }
+
+export default LivePage;
