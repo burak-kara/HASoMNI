@@ -192,8 +192,6 @@ def assignLoadWeights():
     SEGMENT_SIZE = int(CONTENT_LENGTH / 10)
     if secondaryStamp >= 0:
         defaultLoadRate = round((secondaryStamp / (primaryStamp + secondaryStamp)), 2)
-        # TODO change
-        # defaultLoadRate = 0.7
     else:
         defaultLoadRate = 1
 
@@ -357,9 +355,7 @@ class Proxy(SimpleHTTPRequestHandler):
             log.error("Undefined format")
 
 
-addrs = psutil.net_if_addrs()
-print(addrs.keys())
-log.basicConfig(filename='D:\\PyCharm Projects\\Senior\\src\\log_records\\gateway_v3.log', level=log.DEBUG,
+log.basicConfig(filename='D:\\PyCharm Projects\\Senior\\src\\log_records\\gateway_v4.log', level=log.DEBUG,
                 format='%(asctime)s - %(message)s')
 connection = ThreadingHTTPServer((GATEWAY_IP, GATEWAY_PORT), Proxy)
 connection.serve_forever()

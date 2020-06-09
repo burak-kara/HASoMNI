@@ -10,10 +10,10 @@ export default class VodPage extends Component {
                 <div className="row content-row">
                     {this.renderContent()}
                 </div>
-                <div className="row stats-row">
-                    {this.singleConnectionStats()}
-                    {this.hybridConnectionStats()}
-                </div>
+                {/*<div className="row stats-row">*/}
+                {/*    {this.singleConnectionStats()}*/}
+                {/*    {this.hybridConnectionStats()}*/}
+                {/*</div>*/}
             </div>
         );
     };
