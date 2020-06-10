@@ -1,0 +1,213 @@
+2020-06-10 12:23:22,679 - --------------------------Gateway got a new request-------------------------------
+2020-06-10 12:23:22,680 - *** Primary head is started
+2020-06-10 12:23:22,681 - --- Secondary head is started
+2020-06-10 12:23:22,691 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:23:22,692 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:23:22,700 - --- Second connection was not found
+2020-06-10 12:23:22,900 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:23:22,901 - *** Primary head is done
+2020-06-10 12:23:22,901 - ++++ Head requests are done ++++
+2020-06-10 12:23:22,901 - *** Primary stamp: 0.22
+2020-06-10 12:23:22,901 - --- Secondary stamp: -2.06
+2020-06-10 12:23:22,902 - Content-Length: 45577410
+2020-06-10 12:23:22,902 - *** Primary load length: 4557740 bytes / 4.35 MB
+2020-06-10 12:23:22,902 - --- Secondary load length: 0 bytes / 0.0 MB
+2020-06-10 12:23:22,902 - *** Primary GET is started
+2020-06-10 12:23:26,631 - *** Primary GET is done
+2020-06-10 12:23:26,634 - Response is pushed back to client
+2020-06-10 12:23:26,634 - Total time passed: 3.95 seconds
+2020-06-10 12:23:26,635 - ---------------------------- DONE -----------------------------------------
+
+2020-06-10 12:23:30,341 - --------------------------Gateway got a new request-------------------------------
+2020-06-10 12:23:30,342 - *** Primary head is started
+2020-06-10 12:23:30,343 - --- Secondary head is started
+2020-06-10 12:23:30,346 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:23:30,348 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:23:30,348 - --- Second connection was not found
+2020-06-10 12:23:30,553 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:23:30,555 - *** Primary head is done
+2020-06-10 12:23:30,556 - ++++ Head requests are done ++++
+2020-06-10 12:23:30,557 - *** Primary stamp: 0.21
+2020-06-10 12:23:30,557 - --- Secondary stamp: -9.72
+2020-06-10 12:23:30,557 - Content-Length: 45577410
+2020-06-10 12:23:30,557 - *** Primary load length: 4557740 bytes / 4.35 MB
+2020-06-10 12:23:30,557 - --- Secondary load length: 0 bytes / 0.0 MB
+2020-06-10 12:23:30,559 - *** Primary GET is started
+2020-06-10 12:23:34,276 - *** Primary GET is done
+2020-06-10 12:23:34,279 - Response is pushed back to client
+2020-06-10 12:23:34,279 - Total time passed: 3.94 seconds
+2020-06-10 12:23:34,280 - ---------------------------- DONE -----------------------------------------
+
+2020-06-10 12:23:51,271 - --------------------------Gateway got a new request-------------------------------
+2020-06-10 12:23:51,272 - *** Primary head is started
+2020-06-10 12:23:51,272 - --- Secondary head is started
+2020-06-10 12:23:51,276 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:23:51,280 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:23:51,282 - --- Second connection was not found
+2020-06-10 12:23:51,487 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:23:51,488 - *** Primary head is done
+2020-06-10 12:23:51,489 - ++++ Head requests are done ++++
+2020-06-10 12:23:51,489 - *** Primary stamp: 0.22
+2020-06-10 12:23:51,489 - --- Secondary stamp: -30.65
+2020-06-10 12:23:51,489 - Content-Length: 45577410
+2020-06-10 12:23:51,489 - *** Primary load length: 4557740 bytes / 4.35 MB
+2020-06-10 12:23:51,490 - --- Secondary load length: 0 bytes / 0.0 MB
+2020-06-10 12:23:51,490 - *** Primary GET is started
+2020-06-10 12:23:55,194 - *** Primary GET is done
+2020-06-10 12:23:55,197 - Response is pushed back to client
+2020-06-10 12:23:55,197 - Total time passed: 3.93 seconds
+2020-06-10 12:23:55,198 - ---------------------------- DONE -----------------------------------------
+
+2020-06-10 12:24:06,085 - --------------------------Gateway got a new request-------------------------------
+2020-06-10 12:24:06,086 - *** Primary head is started
+2020-06-10 12:24:06,087 - --- Secondary head is started
+2020-06-10 12:24:06,096 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:24:06,099 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:24:06,102 - --- Second connection was not found
+2020-06-10 12:24:06,294 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:24:06,297 - *** Primary head is done
+2020-06-10 12:24:06,298 - ++++ Head requests are done ++++
+2020-06-10 12:24:06,298 - *** Primary stamp: 0.21
+2020-06-10 12:24:06,299 - --- Secondary stamp: -45.46
+2020-06-10 12:24:06,299 - Content-Length: 45577410
+2020-06-10 12:24:06,299 - *** Primary load length: 4557740 bytes / 4.35 MB
+2020-06-10 12:24:06,299 - --- Secondary load length: 0 bytes / 0.0 MB
+2020-06-10 12:24:06,301 - *** Primary GET is started
+2020-06-10 12:24:10,033 - *** Primary GET is done
+2020-06-10 12:24:10,036 - Response is pushed back to client
+2020-06-10 12:24:10,036 - Total time passed: 3.95 seconds
+2020-06-10 12:24:10,036 - ---------------------------- DONE -----------------------------------------
+
+
+2020-06-10 12:26:45,286 - --------------------------Gateway got a new request-------------------------------
+2020-06-10 12:26:45,292 - *** Primary head is started
+2020-06-10 12:26:45,293 - --- Secondary head is started
+2020-06-10 12:26:45,303 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:26:45,304 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:26:45,581 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:26:45,583 - *** Primary head is done
+2020-06-10 12:26:45,799 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:26:45,800 - --- Secondary head is done
+2020-06-10 12:26:45,801 - ++++ Head requests are done ++++
+2020-06-10 12:26:45,801 - *** Primary stamp: 0.29
+2020-06-10 12:26:45,802 - --- Secondary stamp: 0.51
+2020-06-10 12:26:45,802 - Content-Length: 45577410
+2020-06-10 12:26:45,802 - *** Primary load length: 2916953 bytes / 2.78 MB
+2020-06-10 12:26:45,802 - --- Secondary load length: 1640787 bytes / 1.56 MB
+2020-06-10 12:26:45,803 - --- Secondary GET is started
+2020-06-10 12:26:45,806 - *** Primary GET is started
+2020-06-10 12:26:47,255 - *** Primary GET is done
+2020-06-10 12:26:47,487 - --- Secondary GET is done
+2020-06-10 12:26:47,498 - Response is pushed back to client
+2020-06-10 12:26:47,499 - Total time passed: 2.21 seconds
+2020-06-10 12:26:47,501 - ---------------------------- DONE -----------------------------------------
+
+2020-06-10 12:26:51,598 - --------------------------Gateway got a new request-------------------------------
+2020-06-10 12:26:51,599 - *** Primary head is started
+2020-06-10 12:26:51,600 - --- Secondary head is started
+2020-06-10 12:26:51,603 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:26:51,606 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:26:51,815 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:26:51,817 - *** Primary head is done
+2020-06-10 12:26:51,935 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:26:51,936 - --- Secondary head is done
+2020-06-10 12:26:51,937 - ++++ Head requests are done ++++
+2020-06-10 12:26:51,937 - *** Primary stamp: 0.22
+2020-06-10 12:26:51,937 - --- Secondary stamp: 0.34
+2020-06-10 12:26:51,937 - Content-Length: 45577410
+2020-06-10 12:26:51,937 - *** Primary load length: 2780221 bytes / 2.65 MB
+2020-06-10 12:26:51,937 - --- Secondary load length: 1777519 bytes / 1.7 MB
+2020-06-10 12:26:51,938 - --- Secondary GET is started
+2020-06-10 12:26:51,939 - *** Primary GET is started
+2020-06-10 12:26:53,330 - *** Primary GET is done
+2020-06-10 12:26:53,383 - --- Secondary GET is done
+2020-06-10 12:26:53,395 - Response is pushed back to client
+2020-06-10 12:26:53,395 - Total time passed: 1.8 seconds
+2020-06-10 12:26:53,397 - ---------------------------- DONE -----------------------------------------
+
+2020-06-10 12:27:02,852 - --------------------------Gateway got a new request-------------------------------
+2020-06-10 12:27:02,853 - *** Primary head is started
+2020-06-10 12:27:02,855 - --- Secondary head is started
+2020-06-10 12:27:02,860 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:27:02,864 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:27:03,068 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:27:03,070 - *** Primary head is done
+2020-06-10 12:27:03,188 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:27:03,190 - --- Secondary head is done
+2020-06-10 12:27:03,190 - ++++ Head requests are done ++++
+2020-06-10 12:27:03,190 - *** Primary stamp: 0.22
+2020-06-10 12:27:03,192 - --- Secondary stamp: 0.33
+2020-06-10 12:27:03,192 - Content-Length: 45577410
+2020-06-10 12:27:03,192 - *** Primary load length: 2780221 bytes / 2.65 MB
+2020-06-10 12:27:03,192 - --- Secondary load length: 1777519 bytes / 1.7 MB
+2020-06-10 12:27:03,192 - --- Secondary GET is started
+2020-06-10 12:27:03,193 - *** Primary GET is started
+2020-06-10 12:27:04,598 - *** Primary GET is done
+2020-06-10 12:27:05,039 - --- Secondary GET is done
+2020-06-10 12:27:05,053 - Response is pushed back to client
+2020-06-10 12:27:05,054 - Total time passed: 2.2 seconds
+2020-06-10 12:27:05,061 - ---------------------------- DONE -----------------------------------------
+
+2020-06-10 12:27:14,687 - --------------------------Gateway got a new request-------------------------------
+2020-06-10 12:27:14,688 - *** Primary head is started
+2020-06-10 12:27:14,690 - --- Secondary head is started
+2020-06-10 12:27:14,694 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:27:14,698 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:27:14,921 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:27:14,922 - *** Primary head is done
+2020-06-10 12:27:15,085 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:27:15,086 - --- Secondary head is done
+2020-06-10 12:27:15,087 - ++++ Head requests are done ++++
+2020-06-10 12:27:15,088 - *** Primary stamp: 0.23
+2020-06-10 12:27:15,088 - --- Secondary stamp: 0.4
+2020-06-10 12:27:15,088 - Content-Length: 45577410
+2020-06-10 12:27:15,088 - *** Primary load length: 2871376 bytes / 2.74 MB
+2020-06-10 12:27:15,088 - --- Secondary load length: 1686364 bytes / 1.61 MB
+2020-06-10 12:27:15,089 - --- Secondary GET is started
+2020-06-10 12:27:15,090 - *** Primary GET is started
+2020-06-10 12:27:16,410 - *** Primary GET is done
+2020-06-10 12:27:16,597 - --- Secondary GET is done
+2020-06-10 12:27:16,608 - Response is pushed back to client
+2020-06-10 12:27:16,608 - Total time passed: 1.92 seconds
+2020-06-10 12:27:16,610 - ---------------------------- DONE -----------------------------------------
+
+2020-06-10 12:28:06,468 - --------------------------Gateway got a new request-------------------------------
+2020-06-10 12:28:06,469 - *** Primary head is started
+2020-06-10 12:28:06,469 - --- Secondary head is started
+2020-06-10 12:28:06,472 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:28:06,473 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:28:06,497 - --- Second connection was not found
+2020-06-10 12:28:06,692 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:28:06,693 - *** Primary head is done
+2020-06-10 12:28:06,693 - ++++ Head requests are done ++++
+2020-06-10 12:28:06,694 - *** Primary stamp: 0.22
+2020-06-10 12:28:06,694 - --- Secondary stamp: -51.38
+2020-06-10 12:28:06,694 - Content-Length: 45577410
+2020-06-10 12:28:06,694 - *** Primary load length: 4557740 bytes / 4.35 MB
+2020-06-10 12:28:06,694 - --- Secondary load length: 0 bytes / 0.0 MB
+2020-06-10 12:28:06,695 - *** Primary GET is started
+2020-06-10 12:28:08,638 - *** Primary GET is done
+2020-06-10 12:28:08,640 - Response is pushed back to client
+2020-06-10 12:28:08,641 - Total time passed: 2.17 seconds
+2020-06-10 12:28:08,641 - ---------------------------- DONE -----------------------------------------
+
+2020-06-10 12:29:01,112 - --------------------------Gateway got a new request-------------------------------
+2020-06-10 12:29:01,112 - *** Primary head is started
+2020-06-10 12:29:01,113 - --- Secondary head is started
+2020-06-10 12:29:01,117 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:29:01,120 - Starting new HTTP connection (1): commondatastorage.googleapis.com:80
+2020-06-10 12:29:01,121 - --- Second connection was not found
+2020-06-10 12:29:01,317 - http://commondatastorage.googleapis.com:80 "HEAD /gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4 HTTP/1.1" 200 0
+2020-06-10 12:29:01,319 - *** Primary head is done
+2020-06-10 12:29:01,319 - ++++ Head requests are done ++++
+2020-06-10 12:29:01,320 - *** Primary stamp: 0.21
+2020-06-10 12:29:01,320 - --- Secondary stamp: -106.03
+2020-06-10 12:29:01,320 - Content-Length: 45577410
+2020-06-10 12:29:01,320 - *** Primary load length: 4557740 bytes / 4.35 MB
+2020-06-10 12:29:01,320 - --- Secondary load length: 0 bytes / 0.0 MB
+2020-06-10 12:29:01,320 - *** Primary GET is started
+2020-06-10 12:29:03,324 - *** Primary GET is done
+2020-06-10 12:29:03,335 - Response is pushed back to client
+2020-06-10 12:29:03,335 - Total time passed: 2.22 seconds
+2020-06-10 12:29:03,336 - ---------------------------- DONE -----------------------------------------
+

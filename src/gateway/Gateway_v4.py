@@ -7,8 +7,6 @@ import logging as log
 import threading
 import pycurl
 from io import BytesIO
-import netifaces
-import psutil
 
 # init gateway info
 GATEWAY_IP = cfg.primary['ip']
