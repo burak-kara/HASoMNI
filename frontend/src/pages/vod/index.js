@@ -20,7 +20,7 @@ export default class Vod extends Component {
     render() {
         return (
             <>
-                <Search handleClick={this.handleClick} handleChange={this.handleChange}/>
+                {/*<Search handleClick={this.handleClick} handleChange={this.handleChange}/>*/}
                 <VodPage
                     url={this.state.url}
                     singleCounter={this.state.singleCounter}

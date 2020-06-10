@@ -8,7 +8,14 @@ export default class VodPage extends Component {
         return (
             <div className="container-fluid page-container">
                 <div className="row content-row">
-                    {this.renderContent()}
+                    {/*{this.renderContent()}*/}
+                    <div className="col content-col">
+                        <Replay
+                            // source={this.props.url}
+                            source={"http://192.168.1.35:8080/http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"}
+                            initialPlaybackProps={{ isPaused: true }}
+                        />
+                    </div>
                 </div>
                 {/*<div className="row stats-row">*/}
                 {/*    {this.singleConnectionStats()}*/}
@@ -23,7 +30,8 @@ export default class VodPage extends Component {
             return (
                 <div className="col content-col">
                     <Replay
-                        source={this.props.url}
+                        // source={this.props.url}
+                        source={"http://192.168.1.35:8080/http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"}
                         initialPlaybackProps={{ isPaused: true }}
                     />
                 </div>
