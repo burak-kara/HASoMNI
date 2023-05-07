@@ -10,7 +10,7 @@
     "react-d3-speedometer": "^0.8.0",
     "react-dom": "^16.13.1",
     "react-icons": "^3.8.0",
-    "react-scripts": "^3.3.0",
+    "react-scripts": "^5.0.1",
     "react-tooltip-lite": "^1.10.0",
     "redux": "^4.0.5",
     "video-react": "^0.14.1"
